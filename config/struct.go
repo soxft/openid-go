@@ -5,6 +5,7 @@ type Config struct {
 		Addr  string `yaml:"Address"`
 		Debug bool   `yaml:"Debug"`
 		Log   bool   `yaml:"Log"`
+		Title string `yaml:"Title"`
 	} `yaml:"Server"`
 	Redis struct {
 		Addr      string `yaml:"Address"`
@@ -28,6 +29,5 @@ type Config struct {
 		AccessKey    string `yaml:"AccessKey"`
 		AccessSecret string `yaml:"AccessSecret"`
 		Email        string `yaml:"Email"`
-		FromAlias    string `yaml:"FromAlias"`
 	} `yaml:"Aliyun"`
 }

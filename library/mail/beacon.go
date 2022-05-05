@@ -10,7 +10,7 @@ import (
 
 // CreateBeacon
 // @description: 创建邮件发送信标
-func CreateBeacon(c *gin.Context, timeout int) error {
+func CreateBeacon(c *gin.Context, mail string, timeout int) error {
 	_redis := redisutil.R.Get()
 	defer func(_redis redis.Conn) {
 		_ = _redis.Close()
@@ -20,7 +20,7 @@ func CreateBeacon(c *gin.Context, timeout int) error {
 	redisPrefix := config.C.Redis.Prefix
 
 	ipKey := redisPrefix + ":beacon:ip:" + unique
-	mailKey := redisPrefix + ":beacon:ip:" + unique
+	mailKey := redisPrefix + ":beacon:mail:" + tool.Md5(mail)
 	_, _ = _redis.Do("SETEX", ipKey, timeout, "1")
 	_, _ = _redis.Do("SETEX", mailKey, timeout, "1")
 	return nil
@@ -28,7 +28,7 @@ func CreateBeacon(c *gin.Context, timeout int) error {
 
 // CheckBeacon
 // @description: 检查邮件发送信标 避免频繁发信
-func CheckBeacon(c *gin.Context) (bool, error) {
+func CheckBeacon(c *gin.Context, mail string) (bool, error) {
 	_redis := redisutil.R.Get()
 	defer func(_redis redis.Conn) {
 		_ = _redis.Close()
@@ -41,7 +41,7 @@ func CheckBeacon(c *gin.Context) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	mailExists, err := _redis.Do("EXISTS", redisPrefix+":beacon:ip:"+unique)
+	mailExists, err := _redis.Do("EXISTS", redisPrefix+":beacon:mail:"+tool.Md5(mail))
 	if err != nil {
 		return false, err
 	}

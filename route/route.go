@@ -20,8 +20,8 @@ func Init(r *gin.Engine) {
 	// register
 	reg := r.Group("/register")
 	{
+		reg.POST("/sendCode", controller.RegisterSendCode)
 		reg.POST("/submit", controller.RegisterSubmit)
-		reg.POST("/verify", controller.RegisterVerify)
 	}
 }
 
