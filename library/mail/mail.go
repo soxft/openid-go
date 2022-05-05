@@ -3,7 +3,6 @@ package mail
 import (
 	"github.com/aliyun/alibaba-cloud-sdk-go/sdk"
 	"github.com/aliyun/alibaba-cloud-sdk-go/sdk/requests"
-	"log"
 	"openid/config"
 )
 
@@ -28,7 +27,6 @@ func Send(mail Mail) error {
 	request.QueryParams["AddressType"] = "1"
 	request.QueryParams["ReplyToAddress"] = "true"
 
-	response, err := client.ProcessCommonRequest(request)
-	log.Print(response.GetHttpContentString())
+	_, err = client.ProcessCommonRequest(request)
 	return err
 }

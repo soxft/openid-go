@@ -3,7 +3,6 @@ package route
 import (
 	"github.com/gin-gonic/gin"
 	"openid/app/controller"
-	"openid/app/controller/handler"
 	"openid/config"
 )
 
@@ -12,11 +11,11 @@ func Init(r *gin.Engine) {
 	if config.C.Server.Log {
 		r.Use(gin.Logger())
 	}
-	r.NoRoute(handler.NoRoute)
+	r.NoRoute(noRoute)
 
 	// ping
-	r.HEAD("/ping", handler.Ping)
-	r.GET("/ping", handler.Ping)
+	r.HEAD("/ping", controller.Ping)
+	r.GET("/ping", controller.Ping)
 
 	// register
 	reg := r.Group("/register")
@@ -24,5 +23,11 @@ func Init(r *gin.Engine) {
 		reg.POST("/submit", controller.RegisterSubmit)
 		reg.POST("/verify", controller.RegisterVerify)
 	}
+}
 
+func noRoute(c *gin.Context) {
+	c.JSON(404, gin.H{
+		"success": false,
+		"message": "Route not exists",
+	})
 }

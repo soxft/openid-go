@@ -21,6 +21,7 @@ func Init() {
 		if err := json.Unmarshal([]byte(msg), &mailMsg); err != nil {
 			log.Panic(err)
 		}
+		log.Printf("send mail to %s", mailMsg.ToAddress)
 		if err := mail.Send(mailMsg); err != nil {
 			log.Panic(err)
 		}
