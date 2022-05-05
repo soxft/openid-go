@@ -24,4 +24,10 @@ type Config struct {
 		MaxIdle     int    `yaml:"MaxIdle"`
 		MaxLifetime int    `yaml:"MaxLifetime"`
 	} `yaml:"Mysql"`
+	Aliyun struct {
+		AccessKey    string `yaml:"AccessKey"`
+		AccessSecret string `yaml:"AccessSecret"`
+		Email        string `yaml:"Email"`
+		FromAlias    string `yaml:"FromAlias"`
+	} `yaml:"Aliyun"`
 }

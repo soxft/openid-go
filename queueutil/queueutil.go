@@ -1,7 +1,9 @@
 package queueutil
 
 import (
+	"encoding/json"
 	"log"
+	"openid/library/mail"
 	"openid/library/mq"
 	"openid/redisutil"
 )
@@ -15,6 +17,12 @@ func Init() {
 	Q = mq.New(redisutil.R, 3)
 
 	Q.Subscribe("mail", 2, func(msg string) {
-		log.Println(msg)
+		var mailMsg mail.Mail
+		if err := json.Unmarshal([]byte(msg), &mailMsg); err != nil {
+			log.Panic(err)
+		}
+		if err := mail.Send(mailMsg); err != nil {
+			log.Panic(err)
+		}
 	})
 }
