@@ -9,7 +9,7 @@ import (
 // @description send code to email
 func RegisterSubmit(c *gin.Context) {
 	for i := 0; i < 2; i++ {
-		_ = queueutil.Q.Publish("test", "hello", 2)
+		_ = queueutil.Q.Publish("mail", "hello", 0)
 	}
 	c.JSON(200, gin.H{
 		"message": "Register",
