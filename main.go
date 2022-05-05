@@ -4,6 +4,9 @@ import (
 	"github.com/gin-gonic/gin"
 	"log"
 	"openid/config"
+	_ "openid/mysqlutil"
+	"openid/queueutil"
+	_ "openid/redisutil"
 	"openid/route"
 	"os"
 )
@@ -26,4 +29,6 @@ func main() {
 
 func init() {
 	log.SetOutput(os.Stdout)
+	// 初始化消息队列
+	queueutil.Init()
 }
