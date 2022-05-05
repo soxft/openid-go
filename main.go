@@ -16,13 +16,7 @@ func main() {
 
 	// init gin
 	r := gin.New()
-
-	r.Use(gin.Recovery())
-	if config.C.Server.Log {
-		r.Use(gin.Logger())
-	}
-
-	r.NoRoute(route.NoRoute)
+	route.Init(r)
 
 	log.Printf("Server running at %s ", config.C.Server.Addr)
 	if err := r.Run(config.C.Server.Addr); err != nil {

@@ -7,10 +7,12 @@ type Config struct {
 		Log   bool   `yaml:"Log"`
 	} `yaml:"Server"`
 	Redis struct {
-		Addr   string `yaml:"Address"`
-		Pwd    string `yaml:"Password"`
-		Db     int    `yaml:"Database"`
-		Prefix string `yaml:"Prefix"`
+		Addr      string `yaml:"Address"`
+		Pwd       string `yaml:"Password"`
+		Db        int    `yaml:"Database"`
+		Prefix    string `yaml:"Prefix"`
+		MaxIdle   int    `yaml:"MaxIdle"`
+		MaxActive int    `yaml:"MaxActive"`
 	} `yaml:"Redis"`
 	Mysql struct {
 		Addr        string `yaml:"Address"`
