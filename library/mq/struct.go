@@ -6,7 +6,7 @@ import (
 
 type MessageQueue interface {
 	Publish(topic string, msg string, delay int) error
-	Subscribe(topic string, processes int, handler func(msg string))
+	Subscribe(topic string, handler func(msg string))
 }
 
 type QueueArgs struct {

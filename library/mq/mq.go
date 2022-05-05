@@ -3,7 +3,6 @@ package mq
 import (
 	"encoding/json"
 	"github.com/gomodule/redigo/redis"
-	"log"
 	"time"
 )
 
@@ -33,50 +32,47 @@ func (q *QueueArgs) Publish(topic string, msg string, delay int) error {
 	}
 }
 
-func (q *QueueArgs) Subscribe(topic string, processes int, handler func(data string)) {
-	for i := 0; i < processes; i++ {
-		go func() {
-			_redis := q.redis.Get()
-			defer func() {
-				// handle error
-				if err := recover(); err != nil {
-					log.Print(err)
-					q.Subscribe(topic, processes, handler)
-				}
-			}()
-
-			for {
-				_data, err := redis.Strings(_redis.Do("BRPOP", "rmq:"+topic, 1))
-				if err != nil || _data == nil {
-					continue
-				}
-
-				var _msg MsgArgs
-				if err := json.Unmarshal([]byte(_data[1]), &_msg); err != nil {
-					continue
-				}
-				// execute handler
-				go func(_msg MsgArgs) {
-					defer func() {
-						// retry if error
-						if err := recover(); err != nil {
-							if _data, err := json.Marshal(_msg); err != nil {
-								return
-							} else {
-								// max retry
-								if _msg.Retry > q.maxRetries {
-									_, _ = _redis.Do("LPUSH", "rmq:"+topic+"failed", _data)
-									return
-								}
-								_, _ = _redis.Do("LPUSH", "rmq:"+topic, _data)
-							}
-							_msg.Retry++
-						}
-					}()
-					time.Sleep(time.Duration(_msg.Delay) * time.Second)
-					handler(_msg.Msg)
-				}(_msg)
+func (q *QueueArgs) Subscribe(topic string, handler func(data string)) {
+	go func() {
+		_redis := q.redis.Get()
+		defer func() {
+			// handle error
+			if err := recover(); err != nil {
+				q.Subscribe(topic, handler)
 			}
 		}()
-	}
+
+		for {
+			_data, err := redis.Strings(_redis.Do("BRPOP", "rmq:"+topic, 1))
+			if err != nil || _data == nil {
+				continue
+			}
+
+			var _msg MsgArgs
+			if err := json.Unmarshal([]byte(_data[1]), &_msg); err != nil {
+				continue
+			}
+			// execute handler
+			go func(_msg MsgArgs) {
+				defer func() {
+					// retry if error
+					if err := recover(); err != nil {
+						if _data, err := json.Marshal(_msg); err != nil {
+							return
+						} else {
+							// max retry
+							if _msg.Retry > q.maxRetries {
+								_, _ = _redis.Do("LPUSH", "rmq:"+topic+"failed", _data)
+								return
+							}
+							_, _ = _redis.Do("LPUSH", "rmq:"+topic, _data)
+						}
+						_msg.Retry++
+					}
+				}()
+				time.Sleep(time.Duration(_msg.Delay) * time.Second)
+				handler(_msg.Msg)
+			}(_msg)
+		}
+	}()
 }

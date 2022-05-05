@@ -14,7 +14,7 @@ func Init() {
 	// do nothing
 	Q = mq.New(redisutil.R, 3)
 
-	Q.Subscribe("mail", 2, func(msg string) {
+	Q.Subscribe("mail", func(msg string) {
 		log.Println(msg)
 	})
 }
