@@ -67,14 +67,7 @@ func getJti(user UserInfo) (string, error) {
 
 	_jti := tool.Md5(string(JtiJson))
 	_redisKey := config.C.Redis.Prefix + ":jti:" + _jti
-	_redisValue := map[string]interface{}{
-		"userId":   user.UserId,
-		"username": user.Username,
-		"email":    user.Email,
-		"lastTime": user.LastTime,
-		"lastIp":   user.LastIp,
-	}
-	if _, err := _redis.Do("HMSET", redis.Args{}.Add(_redisKey).AddFlat(_redisValue)...); err != nil {
+	if _, err := _redis.Do("HMSET", redis.Args{}.Add(_redisKey).AddFlat(user)...); err != nil {
 		log.Printf("[ERROR] getJti: %s", err.Error())
 		return "", err
 	}
@@ -86,8 +79,11 @@ func getJti(user UserInfo) (string, error) {
 // GetJwtFromAuth
 // 修改密码后 通过 payload 中的 IAT 和 JTI 来删除 redis 中的 JTI
 func GetJwtFromAuth(Authorization string) string {
-	reg := regexp.MustCompile(`^Bearer\s+(.*)`)
-	return reg.FindStringSubmatch(Authorization)[1]
+	reg, _ := regexp.Compile(`^Bearer\s+(.*)$`)
+	if reg.MatchString(Authorization) {
+		return reg.FindStringSubmatch(Authorization)[1]
+	}
+	return ""
 }
 
 func CheckJwt(jwt string) (UserInfo, error) {
@@ -121,21 +117,22 @@ func checkJti(jti string, iat int64) (UserInfo, error) {
 	}(_redis)
 	// get data from redis
 	_redisKey := config.C.Redis.Prefix + ":jti:" + jti
-	_redisStruct, err := redis.Values(_redis.Do("HGETALL", _redisKey))
+	_redisData, err := redis.Values(_redis.Do("HGETALL", _redisKey))
 	if err != nil {
+		return UserInfo{}, errors.New("token expired")
+	}
+	if len(_redisData) == 0 {
 		return UserInfo{}, errors.New("token expired")
 	}
 	// 解析数据
 	var userInfo UserInfo
-	err = redis.ScanStruct(_redisStruct, &userInfo)
-	if err != nil {
-		return UserInfo{}, errors.New("server error")
+	if err = redis.ScanStruct(_redisData, &userInfo); err != nil {
+		return UserInfo{}, errors.New("token expired")
 	}
 	// 判断是否有过期请求
 	// 用户修改密码等操作后 会记录一个 xx:jti:expire:md5(username) 的 key 值为 修改密码时的时间戳, 用来与jwt中的iat进行比较
 	expireTime, err := redis.Int64(_redis.Do("GET", config.C.Redis.Prefix+":jti:expire:"+tool.Md5(userInfo.Username)))
 	if err != nil && err != redis.ErrNil {
-		log.Printf("[ERROR] checkJti: %s", err.Error())
 		return UserInfo{}, errors.New("server error")
 	}
 	if iat < expireTime {

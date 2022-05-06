@@ -3,6 +3,7 @@ package userutil
 import (
 	"database/sql"
 	"errors"
+	"github.com/gin-gonic/gin"
 	"openid/library/tool"
 	"openid/process/mysqlutil"
 	"strconv"
@@ -107,4 +108,13 @@ func CheckPassword(username, password string) (int, error) {
 		}
 		return id, nil
 	}
+}
+
+func GetUserInfoByContext(ctx *gin.Context) (UserInfo, error) {
+	if userInfoInterface, exists := ctx.Get("userInfo"); exists {
+		if userInfo, ok := userInfoInterface.(UserInfo); ok {
+			return userInfo, nil
+		}
+	}
+	return UserInfo{}, errors.New("user info not found")
 }

@@ -12,13 +12,19 @@ func UserPermission() gin.HandlerFunc {
 			c.AbortWithStatusJSON(401, gin.H{
 				"success": false,
 				"message": "Unauthorized",
+				"data":    gin.H{},
 			})
+			return
 		}
 		if userInfo, err := userutil.CheckJwt(token); err != nil {
 			c.AbortWithStatusJSON(401, gin.H{
 				"success": false,
-				"message": err.Error(),
+				"message": "Unauthorized",
+				"data": gin.H{
+					"error": err.Error(),
+				},
 			})
+			return
 		} else {
 			c.Set("userInfo", userInfo)
 		}
