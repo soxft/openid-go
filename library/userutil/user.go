@@ -2,6 +2,7 @@ package userutil
 
 import (
 	"database/sql"
+	"errors"
 	"openid/library/tool"
 	"openid/process/mysqlutil"
 	"strconv"
@@ -79,7 +80,7 @@ func CheckEmail(email string) (bool, error) {
 
 // CheckPassword
 // @description 验证用户登录
-func CheckPassword(username, password string) (bool, int, string) {
+func CheckPassword(username, password string) (int, error) {
 	var row *sql.Stmt
 	var err error
 
@@ -89,21 +90,21 @@ func CheckPassword(username, password string) (bool, int, string) {
 		row, err = mysqlutil.D.Prepare("SELECT `id`,`salt`,`password` FROM `account` WHERE `username` = ? ")
 	}
 	if err != nil {
-		return false, 0, "system error"
+		return 0, errors.New("system error")
 	}
 	res := row.QueryRow(username)
 	if res.Err() == sql.ErrNoRows {
-		return false, 0, "用户名或密码错误"
+		return 0, errors.New("用户名或密码错误")
 	} else if res.Err() != nil {
-		return false, 0, "system error"
+		return 0, errors.New("system error")
 	} else {
 		var id int
 		var salt string
 		var passwordDb string
 		_ = res.Scan(&id, &salt, &passwordDb)
 		if tool.Sha1(password+salt) != passwordDb {
-			return false, 0, "用户名或密码错误"
+			return 0, errors.New("用户名或密码错误")
 		}
-		return true, id, ""
+		return id, nil
 	}
 }
