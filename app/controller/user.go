@@ -10,9 +10,9 @@ func UserStatus(c *gin.Context) {
 	api := tool.ApiController{
 		Ctx: c,
 	}
-	userInfo, _ := userutil.GetUserInfoByContext(c)
+	userInfo, _ := c.Get("userInfo")
 	api.Out(true, "logon", gin.H{
-		"username": userInfo.Username,
-		"userId":   userInfo.UserId,
+		"username": userInfo.(userutil.UserInfo).Username,
+		"userId":   userInfo.(userutil.UserInfo).UserId,
 	})
 }

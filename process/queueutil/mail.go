@@ -13,8 +13,18 @@ func Mail(msg string) {
 	if err := json.Unmarshal([]byte(msg), &mailMsg); err != nil {
 		log.Panic(err)
 	}
-	log.Printf("send mail to %s", mailMsg.ToAddress)
-	if err := mailutil.Send(mailMsg); err != nil {
+	log.Printf("[INFO] Mail(%s) %s", mailMsg.Typ, mailMsg.ToAddress)
+
+	// get mail platform
+	var platform mailutil.MailPlatform
+	switch mailMsg.Typ {
+	case "register":
+		platform = mailutil.MailplatformAliyun
+	default:
+		platform = mailutil.MailplatformAliyun
+	}
+	// send mail
+	if err := mailutil.Send(mailMsg, platform); err != nil {
 		log.Panic(err)
 	}
 }

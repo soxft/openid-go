@@ -49,6 +49,7 @@ func RegisterSendCode(c *gin.Context) {
 		ToAddress: email,
 		Subject:   "注册验证码",
 		Content:   "您的验证码为: " + verifyCode + ", 有效期10分钟",
+		Typ:       "register",
 	})
 
 	if err := coder.Save("register", email, verifyCode, 60*10); err != nil {
