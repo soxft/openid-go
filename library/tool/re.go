@@ -7,7 +7,14 @@ func IsEmail(email string) bool {
 	return b
 }
 
-func IsID(id string) bool {
+func IsUserName(id string) bool {
 	b, _ := regexp.MatchString("^[0-9a-zA-Z]{5,30}$", id)
 	return b
+}
+
+func IsPassword(password string) bool {
+	if len(password) < 6 || len(password) > 128 {
+		return false
+	}
+	return true
 }

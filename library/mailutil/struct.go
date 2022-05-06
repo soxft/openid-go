@@ -1,4 +1,4 @@
-package mail
+package mailutil
 
 type Mail struct {
 	Subject   string

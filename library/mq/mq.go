@@ -3,6 +3,7 @@ package mq
 import (
 	"encoding/json"
 	"github.com/gomodule/redigo/redis"
+	"sync"
 	"time"
 )
 
@@ -43,6 +44,8 @@ func (q *QueueArgs) Subscribe(topic string, processes int, handler func(data str
 				}
 			}()
 
+			// 阻塞
+			wg := sync.WaitGroup{}
 			for {
 				_data, err := redis.Strings(_redis.Do("BRPOP", "rmq:"+topic, 1))
 				if err != nil || _data == nil {
@@ -53,10 +56,13 @@ func (q *QueueArgs) Subscribe(topic string, processes int, handler func(data str
 				if err := json.Unmarshal([]byte(_data[1]), &_msg); err != nil {
 					continue
 				}
+
+				wg.Add(1)
 				// execute handler
 				go func(_msg MsgArgs) {
 					defer func() {
 						// retry if error
+						wg.Done()
 						if err := recover(); err != nil {
 							if _data, err := json.Marshal(_msg); err != nil {
 								return
@@ -74,6 +80,8 @@ func (q *QueueArgs) Subscribe(topic string, processes int, handler func(data str
 					time.Sleep(time.Duration(_msg.Delay) * time.Second)
 					handler(_msg.Msg)
 				}(_msg)
+				// wait for handler
+				wg.Wait()
 			}
 		}()
 	}

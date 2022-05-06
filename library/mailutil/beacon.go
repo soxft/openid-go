@@ -1,4 +1,4 @@
-package mail
+package mailutil
 
 import (
 	"github.com/gin-gonic/gin"

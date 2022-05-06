@@ -1,4 +1,4 @@
-package code
+package codeutil
 
 import (
 	"github.com/gomodule/redigo/redis"
@@ -7,12 +7,11 @@ import (
 	"openid/redisutil"
 )
 
-// TODO 新建一个 code 类
-
 type Coder interface {
 	Create(length int) string
 	Save(topic string, timeout int64, email string, code string) error
 	Check(topic string, email string, code string) (bool, error)
+	Consume(topic string, email string)
 }
 
 type VerifyCode struct {
@@ -47,9 +46,20 @@ func (c VerifyCode) Check(topic string, email string, code string) (bool, error)
 	} else {
 		if realCode == tool.Md5(code) {
 			// delete key
-			_, _ = _redis.Do("DEL", redisKey)
 			return true, nil
 		}
 	}
 	return false, nil
+}
+
+// Consume
+// @description: del code
+func (c VerifyCode) Consume(topic string, email string) {
+	_redis := redisutil.R.Get()
+	defer func(_redis redis.Conn) {
+		_ = _redis.Close()
+	}(_redis)
+
+	redisKey := config.C.Redis.Prefix + ":code:" + topic + ":" + tool.Md5(email)
+	_, _ = _redis.Do("DEL", redisKey)
 }
