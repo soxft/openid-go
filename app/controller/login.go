@@ -18,8 +18,8 @@ func Login(c *gin.Context) {
 	}
 
 	// check username and password
-	if success, userId, msg := userutil.CheckPassword(username, password); !success {
-		api.Out(false, msg, gin.H{})
+	if userId, err := userutil.CheckPassword(username, password); err != nil {
+		api.Out(false, err.Error(), gin.H{})
 		return
 	} else {
 		// get token
