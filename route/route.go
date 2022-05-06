@@ -11,17 +11,23 @@ func Init(r *gin.Engine) {
 	if config.C.Server.Log {
 		r.Use(gin.Logger())
 	}
-	r.NoRoute(noRoute)
-
-	// ping
-	r.HEAD("/ping", controller.Ping)
-	r.GET("/ping", controller.Ping)
-
-	// register
-	reg := r.Group("/register")
 	{
-		reg.POST("/sendCode", controller.RegisterSendCode)
-		reg.POST("/submit", controller.RegisterSubmit)
+		// ping
+		{
+			r.HEAD("/ping", controller.Ping)
+			r.GET("/ping", controller.Ping)
+		}
+
+		// register
+		reg := r.Group("/register")
+		{
+			reg.POST("/sendCode", controller.RegisterSendCode)
+			reg.POST("/submit", controller.RegisterSubmit)
+		}
+		// login
+		r.POST("/login", controller.Login)
+
+		r.NoRoute(noRoute)
 	}
 }
 
