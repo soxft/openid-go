@@ -2,7 +2,7 @@ package queueutil
 
 import (
 	"openid/library/mq"
-	"openid/redisutil"
+	"openid/process/redisutil"
 )
 
 var Q mq.MessageQueue

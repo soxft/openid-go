@@ -3,6 +3,7 @@ package route
 import (
 	"github.com/gin-gonic/gin"
 	"openid/app/controller"
+	"openid/app/middleware"
 	"openid/config"
 )
 
@@ -11,6 +12,7 @@ func Init(r *gin.Engine) {
 	if config.C.Server.Log {
 		r.Use(gin.Logger())
 	}
+	r.Use(middleware.Cors())
 	{
 		// ping
 		{

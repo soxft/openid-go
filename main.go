@@ -4,9 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"log"
 	"openid/config"
-	_ "openid/mysqlutil"
-	"openid/queueutil"
-	_ "openid/redisutil"
+	"openid/process/queueutil"
 	"openid/route"
 	"os"
 )

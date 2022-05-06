@@ -4,7 +4,7 @@ import (
 	"github.com/gomodule/redigo/redis"
 	"openid/config"
 	"openid/library/tool"
-	"openid/redisutil"
+	"openid/process/redisutil"
 )
 
 type Coder interface {

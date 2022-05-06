@@ -7,8 +7,8 @@ import (
 	"openid/library/mailutil"
 	"openid/library/tool"
 	"openid/library/userutil"
-	"openid/mysqlutil"
-	"openid/queueutil"
+	"openid/process/mysqlutil"
+	"openid/process/queueutil"
 	"time"
 )
 
