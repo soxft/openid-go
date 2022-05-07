@@ -21,6 +21,7 @@ func DelApp(c *gin.Context) {
 // @desc 获取用户app列表
 func DevGetAppList(c *gin.Context) {
 	userInfo, _ := c.Get("userInfo")
-	api := apiutil.Api{Ctx: c}
-	api.Out()
+	api := apiutil.New(c)
+	api.Success("success", userInfo)
+
 }

@@ -2,15 +2,10 @@ package apiutil
 
 import "github.com/gin-gonic/gin"
 
-type Apier interface {
-	Out(success bool, msg string, data interface{})
-	Success(msg string, data interface{})
-	Abort(httpCode int, msg string, errorCode int)
-	Abort401(msg string, errCode int)
-}
-
-type Api struct {
-	Ctx *gin.Context
+func New(ctx *gin.Context) *Api {
+	return &Api{
+		Ctx: ctx,
+	}
 }
 
 func (c *Api) Out(success bool, msg string, data interface{}) {
@@ -23,6 +18,10 @@ func (c *Api) Out(success bool, msg string, data interface{}) {
 
 func (c *Api) Success(msg string, data interface{}) {
 	c.Out(true, msg, data)
+}
+
+func (c *Api) Fail(msg string, data interface{}) {
+	c.Out(false, msg, data)
 }
 
 func (c *Api) Abort(httpCode int, msg string, errorCode int) {
