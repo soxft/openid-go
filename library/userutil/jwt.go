@@ -12,6 +12,7 @@ import (
 	"openid/process/mysqlutil"
 	"openid/process/redisutil"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -30,7 +31,10 @@ func GenerateJwt(userId int) (string, error) {
 	}
 
 	userRedis := UserInfo{}
-	_ = res.Scan(&userRedis.UserId, &userRedis.Username, &userRedis.Email, &userRedis.LastTime, &userRedis.LastIp)
+	userLast := UserLastInfo{}
+	_ = res.Scan(&userRedis.UserId, &userRedis.Username, &userRedis.Email, &userLast.LastTime, &userLast.LastIp)
+	log.Print("[INFO] GenerateToken: ", userLast)
+	_ = setUserBaseInfo(userRedis.UserId, userLast)
 
 	headerJson, _ := json.Marshal(JwtHeader{
 		Alg: "HS256",
@@ -66,7 +70,7 @@ func getJti(user UserInfo) (string, error) {
 	}(_redis)
 
 	_jti := tool.Md5(string(JtiJson))
-	_redisKey := config.C.Redis.Prefix + ":jti:" + _jti
+	_redisKey := config.RedisPrefix + ":jti:" + _jti
 	if _, err := _redis.Do("HMSET", redis.Args{}.Add(_redisKey).AddFlat(user)...); err != nil {
 		log.Printf("[ERROR] getJti: %s", err.Error())
 		return "", err
@@ -86,6 +90,9 @@ func GetJwtFromAuth(Authorization string) string {
 	return ""
 }
 
+// CheckJwt
+// @description check JWT token
+// @param 用户每次请求是验证JWT token
 func CheckJwt(jwt string) (UserInfo, error) {
 	_jwt := strings.Split(jwt, ".")
 	if len(_jwt) != 3 {
@@ -106,17 +113,20 @@ func CheckJwt(jwt string) (UserInfo, error) {
 	if userInfo, err = checkJti(payload.Jti, payload.Iat); err != nil {
 		return UserInfo{}, err
 	}
+	// 续期
+	setExpire(":jti:"+payload.Jti, ":user:last:"+strconv.Itoa(userInfo.UserId))
 
 	return userInfo, nil
 }
 
+// checkJti
 func checkJti(jti string, iat int64) (UserInfo, error) {
 	_redis := redisutil.R.Get()
 	defer func(_redis redis.Conn) {
 		_ = _redis.Close()
 	}(_redis)
 	// get data from redis
-	_redisKey := config.C.Redis.Prefix + ":jti:" + jti
+	_redisKey := config.RedisPrefix + ":jti:" + jti
 	_redisData, err := redis.Values(_redis.Do("HGETALL", _redisKey))
 	if err != nil {
 		return UserInfo{}, errors.New("token expired")
@@ -129,9 +139,9 @@ func checkJti(jti string, iat int64) (UserInfo, error) {
 	if err = redis.ScanStruct(_redisData, &userInfo); err != nil {
 		return UserInfo{}, errors.New("token expired")
 	}
-	// 判断是否有过期请求
+	// 判断是否有过期请求 TODO
 	// 用户修改密码等操作后 会记录一个 xx:jti:expire:md5(username) 的 key 值为 修改密码时的时间戳, 用来与jwt中的iat进行比较
-	expireTime, err := redis.Int64(_redis.Do("GET", config.C.Redis.Prefix+":jti:expire:"+tool.Md5(userInfo.Username)))
+	expireTime, err := redis.Int64(_redis.Do("GET", config.RedisPrefix+":jti:expire:"+tool.Md5(userInfo.Username)))
 	if err != nil && err != redis.ErrNil {
 		return UserInfo{}, errors.New("server error")
 	}
@@ -140,7 +150,22 @@ func checkJti(jti string, iat int64) (UserInfo, error) {
 		return UserInfo{}, errors.New("token expired")
 	}
 
-	// 续期
-	_, err = _redis.Do("EXPIRE", _redisKey, 60*60*24*14)
 	return userInfo, nil
+}
+
+func setUserBaseInfo(userId int, user UserLastInfo) error {
+	_redis := redisutil.R.Get()
+	_redisKey := config.RedisPrefix + ":user:last:" + strconv.Itoa(userId)
+	_, err := _redis.Do("HMSET", redis.Args{}.Add(_redisKey).AddFlat(user)...)
+	_ = _redis.Close()
+	return err
+}
+
+func setExpire(redisKey ...string) {
+	_redis := redisutil.R.Get()
+	for _, key := range redisKey {
+		_redisKey := config.RedisPrefix + key
+		_, _ = _redis.Do("EXPIRE", _redisKey, 60*60*24*14)
+	}
+	_ = _redis.Close()
 }

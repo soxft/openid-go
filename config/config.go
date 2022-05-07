@@ -7,7 +7,10 @@ import (
 	"os"
 )
 
-var C *Config
+var (
+	C           *Config
+	RedisPrefix string
+)
 
 func init() {
 	log.SetOutput(os.Stdout)
@@ -20,5 +23,6 @@ func init() {
 	if err := yaml.Unmarshal(data, C); err != nil {
 		log.Panicf("error when unmarshal yaml: %v", err)
 	}
+	RedisPrefix = C.Redis.Prefix
 	log.Print("config init")
 }

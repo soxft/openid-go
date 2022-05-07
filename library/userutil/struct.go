@@ -29,6 +29,9 @@ type UserInfo struct {
 	UserId   int    `json:"userId"`
 	Username string `json:"username"`
 	Email    string `json:"email"`
-	LastTime int64  `json:"lastTime"`
-	LastIp   string `json:"lastIp"`
+}
+
+type UserLastInfo struct {
+	LastIp   string
+	LastTime int64
 }

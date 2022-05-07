@@ -3,8 +3,11 @@ package userutil
 import (
 	"database/sql"
 	"errors"
+	"github.com/gomodule/redigo/redis"
+	"openid/config"
 	"openid/library/tool"
 	"openid/process/mysqlutil"
+	"openid/process/redisutil"
 	"strconv"
 	"time"
 )
@@ -107,4 +110,21 @@ func CheckPassword(username, password string) (int, error) {
 		}
 		return id, nil
 	}
+}
+
+// GetUserLast
+// @description Get user last login time and ip
+func GetUserLast(userId int) UserLastInfo {
+	// get from redis
+	_redis := redisutil.R.Get()
+	_redisKey := config.RedisPrefix + ":user:last:" + strconv.Itoa(userId)
+
+	var userLastInfo UserLastInfo
+	row, err := redis.Values(_redis.Do("HGETALL", _redisKey))
+	if err != nil {
+		return userLastInfo
+	}
+	_ = redis.ScanStruct(row, &userLastInfo)
+	_ = _redis.Close()
+	return userLastInfo
 }
