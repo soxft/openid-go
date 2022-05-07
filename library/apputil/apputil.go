@@ -3,12 +3,19 @@ package apputil
 import (
 	"database/sql"
 	"errors"
+	"html"
 	"log"
 	"openid/process/mysqlutil"
 )
 
 func CheckName(name string) bool {
-	return false
+	if html.EscapeString(name) != name {
+		return false
+	}
+	if len(name) < 2 || len(name) > 20 {
+		return false
+	}
+	return true
 }
 
 func CheckAppIdExists(appid string) (bool, error) {
