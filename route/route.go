@@ -2,6 +2,7 @@ package route
 
 import (
 	"github.com/gin-gonic/gin"
+	"openid/api/version_one"
 	"openid/app/controller"
 	"openid/app/middleware"
 	"openid/config"
@@ -41,6 +42,13 @@ func Init(r *gin.Engine) {
 			app.Use(middleware.AuthPermission())
 			app.GET("/list", controller.AppGetList)
 			app.POST("/create", controller.AppCreate)
+		}
+
+		v1 := r.Group("/v1")
+		{
+			v1.GET("/login", version_one.Login)
+			v1.POST("/info", version_one.Info)
+			v1.POST("/login", version_one.LoginHandler)
 		}
 
 		r.NoRoute(noRoute)
