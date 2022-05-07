@@ -7,8 +7,18 @@ import (
 	"strconv"
 )
 
+// AppCreate
+// @description: 创建应用
+// @route: POST /app/create
 func AppCreate(c *gin.Context) {
-
+	appName := c.PostForm("app_name")
+	api := apiutil.New(c)
+	if !apputil.CheckName(appName) {
+		api.Fail("应用名称不合法")
+		return
+	}
+	// 创建应用
+	api.Success("创建应用成功")
 }
 
 func AppEdit(c *gin.Context) {
@@ -21,6 +31,7 @@ func AppDel(c *gin.Context) {
 
 // AppGetList
 // @desc 获取用户app列表
+// @route GET /app/list
 func AppGetList(c *gin.Context) {
 	pageTmp := c.DefaultQuery("page", "1")
 	limitTmp := c.DefaultQuery("limit", "10")
@@ -64,7 +75,7 @@ func AppGetList(c *gin.Context) {
 		return
 	}
 
-	api.Success("success", gin.H{
+	api.SuccessWithData("success", gin.H{
 		"counts": appCounts,
 		"list":   appList,
 	})

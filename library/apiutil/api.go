@@ -16,7 +16,11 @@ func (c *Api) Out(success bool, msg string, data interface{}) {
 	})
 }
 
-func (c *Api) Success(msg string, data interface{}) {
+func (c *Api) Success(msg string) {
+	c.Out(true, msg, gin.H{})
+}
+
+func (c *Api) SuccessWithData(msg string, data interface{}) {
 	c.Out(true, msg, data)
 }
 

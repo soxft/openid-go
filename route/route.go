@@ -40,6 +40,7 @@ func Init(r *gin.Engine) {
 		{
 			app.Use(middleware.AuthPermission())
 			app.GET("/list", controller.AppGetList)
+			app.POST("/create", controller.AppCreate)
 		}
 
 		r.NoRoute(noRoute)

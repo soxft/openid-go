@@ -1,6 +1,7 @@
 package apputil
 
 import (
+	"database/sql"
 	"errors"
 	"log"
 	"openid/process/mysqlutil"
@@ -8,6 +9,27 @@ import (
 
 func CheckName(name string) bool {
 	return false
+}
+
+func CheckAppIdExists(appid string) (bool, error) {
+	db, err := mysqlutil.D.Prepare("select `id` from `app` where `appid` = ?")
+	if err != nil {
+		log.Printf("[ERROR] CheckAppIdExists: %s", err.Error())
+		return false, err
+	}
+	row := db.QueryRow(appid)
+	var id int
+	err = row.Scan(&id)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return false, nil
+		} else {
+			log.Printf("[ERROR] CheckAppIdExists: %s", err.Error())
+			return false, err
+		}
+	}
+	_ = db.Close()
+	return false, nil
 }
 
 func GetUserAppList(userId, limit, offset int) ([]AppBaseStruct, error) {
