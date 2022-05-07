@@ -20,7 +20,11 @@ func (c *Api) Success(msg string, data interface{}) {
 	c.Out(true, msg, data)
 }
 
-func (c *Api) Fail(msg string, data interface{}) {
+func (c *Api) Fail(msg string) {
+	c.Out(false, msg, gin.H{})
+}
+
+func (c *Api) FailWithData(msg string, data interface{}) {
 	c.Out(false, msg, data)
 }
 
