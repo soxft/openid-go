@@ -2,14 +2,14 @@ package controller
 
 import (
 	"github.com/gin-gonic/gin"
-	"openid/library/tool"
+	"openid/library/apiutil"
 	"openid/library/userutil"
 )
 
 // UserStatus
 // @description 判断用户登录状态
 func UserStatus(c *gin.Context) {
-	api := tool.ApiController{
+	api := apiutil.Api{
 		Ctx: c,
 	}
 	// 中间件中已经处理, 直接输出
@@ -19,7 +19,7 @@ func UserStatus(c *gin.Context) {
 // UserInfo
 // @description 获取用户信息
 func UserInfo(c *gin.Context) {
-	api := tool.ApiController{
+	api := apiutil.Api{
 		Ctx: c,
 	}
 	userInfo, _ := c.Get("userInfo")

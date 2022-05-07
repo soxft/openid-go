@@ -2,14 +2,14 @@ package controller
 
 import (
 	"github.com/gin-gonic/gin"
-	"openid/library/tool"
+	"openid/library/apiutil"
 	"openid/library/userutil"
 )
 
 func Login(c *gin.Context) {
 	username := c.PostForm("username")
 	password := c.PostForm("password")
-	api := &tool.ApiController{
+	api := &apiutil.Api{
 		Ctx: c,
 	}
 	if len(username) == 0 || len(password) == 0 {

@@ -36,6 +36,12 @@ func Init(r *gin.Engine) {
 			user.POST("/info", controller.UserInfo)
 		}
 
+		dev := r.Group("/user")
+		{
+			dev.Use(middleware.AuthPermission())
+			dev.POST("/list", controller.DevGetAppList)
+		}
+
 		r.NoRoute(noRoute)
 	}
 }

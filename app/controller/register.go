@@ -3,6 +3,7 @@ package controller
 import (
 	"encoding/json"
 	"github.com/gin-gonic/gin"
+	"openid/library/apiutil"
 	"openid/library/codeutil"
 	"openid/library/mailutil"
 	"openid/library/tool"
@@ -17,7 +18,7 @@ import (
 func RegisterSendCode(c *gin.Context) {
 	email := c.PostForm("email")
 
-	api := &tool.ApiController{
+	api := &apiutil.Api{
 		Ctx: c,
 	}
 	// verify email by re
@@ -74,7 +75,7 @@ func RegisterSubmit(c *gin.Context) {
 	username := c.PostForm("username")
 	password := c.PostForm("password")
 
-	api := &tool.ApiController{
+	api := &apiutil.Api{
 		Ctx: c,
 	}
 	// 合法检测
