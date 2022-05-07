@@ -32,8 +32,8 @@ func Init(r *gin.Engine) {
 		user := r.Group("/user")
 		{
 			user.Use(middleware.AuthPermission())
-			user.POST("/status", controller.UserStatus)
-			user.POST("/info", controller.UserInfo)
+			user.GET("/status", controller.UserStatus)
+			user.GET("/info", controller.UserInfo)
 		}
 
 		dev := r.Group("/user")
