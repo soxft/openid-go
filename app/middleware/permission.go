@@ -42,7 +42,10 @@ func AuthPermission() gin.HandlerFunc {
 			api.Abort401("Unauthorized", 4)
 			return
 		} else {
-			c.Set("userInfo", userInfo)
+			c.Set("userId", userInfo.UserId)
+			c.Set("username", userInfo.Username)
+			c.Set("email", userInfo.Email)
+
 		}
 		c.Next()
 	}

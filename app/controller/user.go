@@ -22,13 +22,12 @@ func UserInfo(c *gin.Context) {
 	api := apiutil.Api{
 		Ctx: c,
 	}
-	userInfo, _ := c.Get("userInfo")
-	type UserInfo = userutil.UserInfo
-	userLast := userutil.GetUserLast(userInfo.(UserInfo).UserId)
+	userId := c.GetInt("userId")
+	userLast := userutil.GetUserLast(userId)
 	api.Out(true, "userInfo", gin.H{
-		"userId":   userInfo.(UserInfo).UserId,
-		"username": userInfo.(UserInfo).Username,
-		"email":    userInfo.(UserInfo).Email,
+		"userId":   userId,
+		"username": c.GetString("username"),
+		"email":    c.GetString("email"),
 		"lastTime": userLast.LastTime,
 	})
 }

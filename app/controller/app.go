@@ -5,23 +5,23 @@ import (
 	"openid/library/apiutil"
 )
 
-func CreateApp(c *gin.Context) {
+func AppCreate(c *gin.Context) {
 
 }
 
-func EditApp(c *gin.Context) {
+func AppEdit(c *gin.Context) {
 
 }
 
-func DelApp(c *gin.Context) {
+func AppDel(c *gin.Context) {
 
 }
 
 // AppGetList
 // @desc 获取用户app列表
 func AppGetList(c *gin.Context) {
-	userInfo, _ := c.Get("userInfo")
 	api := apiutil.New(c)
-	api.Success("success", userInfo)
-
+	api.Success("success", gin.H{
+		"userId": c.GetInt("userId"),
+	})
 }
