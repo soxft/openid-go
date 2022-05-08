@@ -38,11 +38,11 @@ func CreateApp(userId int, appName string) (bool, error) {
 	}
 
 	// 创建app
-	appId, err := GenerateAppId()
+	appId, err := generateAppId()
 	if err != nil {
 		return false, err
 	}
-	appSecret := GenerateAppSecret()
+	appSecret := generateAppSecret()
 	db, err := mysqlutil.D.Prepare("INSERT INTO `app` (`userId`,`appId`,`appName`,`appSecret`,`appGateway`,`time`) VALUES (?, ?, ?, ?, ?, ?)")
 	if err != nil {
 		log.Printf("[apputil] create app failed: %s", err.Error())
@@ -54,57 +54,6 @@ func CreateApp(userId int, appName string) (bool, error) {
 		return false, errors.New("server error")
 	}
 	return true, nil
-}
-
-// GenerateAppId
-// 创建唯一的appid
-func GenerateAppId() (string, error) {
-	timeUnix := time.Now().Unix()
-	Tp := strconv.FormatInt(timeUnix, 10)
-	// 随机数种子
-	rand.Seed(time.Now().UnixNano())
-	appId := time.Now().Format("20060102") + Tp[len(Tp)-4:] + strconv.Itoa(tool.RandInt(1000, 9999))
-	if exists, err := checkAppIdExists(appId); err != nil {
-		return "", err
-	} else {
-		if exists {
-			return GenerateAppId()
-		}
-		return appId, nil
-	}
-}
-
-// GenerateAppSecret
-// 创建唯一的appSecret
-func GenerateAppSecret() string {
-	a := tool.Md5(time.Now().Format("20060102"))[:16]
-	b := tool.Md5(strconv.FormatInt(time.Now().UnixNano(), 10))[:16]
-	c := tool.RandStr(16)
-	d := tool.RandStr(16)
-	return strings.Join([]string{a, b, c, d}, ".")
-}
-
-// CheckAppIdExists
-// @description: check if appid exists
-func checkAppIdExists(appid string) (bool, error) {
-	db, err := mysqlutil.D.Prepare("select `id` from `app` where `appid` = ?")
-	if err != nil {
-		log.Printf("[ERROR] CheckAppIdExists: %s", err.Error())
-		return false, errors.New("system error")
-	}
-	row := db.QueryRow(appid)
-	var id int
-	err = row.Scan(&id)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return false, nil
-		} else {
-			log.Printf("[ERROR] CheckAppIdExists: %s", err.Error())
-			return false, errors.New("system error")
-		}
-	}
-	_ = db.Close()
-	return false, nil
 }
 
 // GetUserAppList
@@ -153,4 +102,55 @@ func GetUserAppCount(userId int) (int, error) {
 		return 0, errors.New("AppGetCount error")
 	}
 	return count, nil
+}
+
+// GenerateAppId
+// 创建唯一的appid
+func generateAppId() (string, error) {
+	timeUnix := time.Now().Unix()
+	Tp := strconv.FormatInt(timeUnix, 10)
+	// 随机数种子
+	rand.Seed(time.Now().UnixNano())
+	appId := time.Now().Format("20060102") + Tp[len(Tp)-4:] + strconv.Itoa(tool.RandInt(1000, 9999))
+	if exists, err := checkAppIdExists(appId); err != nil {
+		return "", err
+	} else {
+		if exists {
+			return generateAppId()
+		}
+		return appId, nil
+	}
+}
+
+// GenerateAppSecret
+// 创建唯一的appSecret
+func generateAppSecret() string {
+	a := tool.Md5(time.Now().Format("20060102"))[:16]
+	b := tool.Md5(strconv.FormatInt(time.Now().UnixNano(), 10))[:16]
+	c := tool.RandStr(16)
+	d := tool.RandStr(16)
+	return strings.Join([]string{a, b, c, d}, ".")
+}
+
+// CheckAppIdExists
+// @description: check if appid exists
+func checkAppIdExists(appid string) (bool, error) {
+	db, err := mysqlutil.D.Prepare("select `id` from `app` where `appid` = ?")
+	if err != nil {
+		log.Printf("[ERROR] CheckAppIdExists: %s", err.Error())
+		return false, errors.New("system error")
+	}
+	row := db.QueryRow(appid)
+	var id int
+	err = row.Scan(&id)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return false, nil
+		} else {
+			log.Printf("[ERROR] CheckAppIdExists: %s", err.Error())
+			return false, errors.New("system error")
+		}
+	}
+	_ = db.Close()
+	return false, nil
 }
