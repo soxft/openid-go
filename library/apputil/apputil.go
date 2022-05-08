@@ -161,6 +161,25 @@ func GetUserAppCount(userId int) (int, error) {
 	return count, nil
 }
 
+func GetAppInfo(appId int) (AppFullInfoStruct, error) {
+	var appInfo AppFullInfoStruct
+	db, err := mysqlutil.D.Prepare("SELECT `id`,`appId`,`appName`,`appSecret`,`appGateway`,`time` FROM `app` WHERE `appId` = ?")
+	if err != nil {
+		log.Printf("[ERROR] AppGetInfo error: %s", err)
+		return appInfo, errors.New("AppGetInfo error")
+	}
+	err = db.QueryRow(appId).Scan(&appInfo.Id, &appInfo.AppId, &appInfo.AppName, &appInfo.AppSecret, &appInfo.AppGateway, &appInfo.Time)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return appInfo, errors.New("app not found")
+		} else {
+			log.Printf("[ERROR] GetAppInfo error: %s", err.Error())
+			return appInfo, errors.New("server error")
+		}
+	}
+	return appInfo, nil
+}
+
 // GenerateAppId
 // 创建唯一的appid
 func generateAppId() (string, error) {

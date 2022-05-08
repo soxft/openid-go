@@ -79,6 +79,9 @@ func AppEdit(c *gin.Context) {
 	api.Success("修改成功")
 }
 
+// AppDel
+// @description: 删除app
+// @route: DELETE /app/:id
 func AppDel(c *gin.Context) {
 	appId := c.Param("appId")
 	api := apiutil.New(c)
@@ -97,8 +100,34 @@ func AppDel(c *gin.Context) {
 	}
 }
 
+// AppInfo
+// @description: 获取app详细信息
+// GET /app/:id
 func AppInfo(c *gin.Context) {
-
+	appId := c.Param("appId")
+	api := apiutil.New(c)
+	appIdInt, err := strconv.Atoi(appId)
+	if err != nil {
+		api.Fail("非法访问")
+		return
+	}
+	// 判断是否为 该用户的app
+	if i, err := apputil.CheckIfUserApp(appIdInt, c.GetInt("userId")); err != nil {
+		api.Fail("system error")
+		return
+	} else {
+		if !i {
+			api.Fail("没有权限")
+			return
+		}
+	}
+	// get app info
+	if appInfo, err := apputil.GetAppInfo(appIdInt); err != nil {
+		api.Fail("system error")
+		return
+	} else {
+		api.SuccessWithData("success", appInfo)
+	}
 }
 
 // AppGetList
