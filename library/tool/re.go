@@ -13,7 +13,7 @@ func IsUserName(id string) bool {
 }
 
 func IsPassword(password string) bool {
-	if len(password) < 6 || len(password) > 128 {
+	if len(password) < 8 || len(password) > 64 {
 		return false
 	}
 	return true

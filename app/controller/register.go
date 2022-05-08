@@ -3,6 +3,7 @@ package controller
 import (
 	"encoding/json"
 	"github.com/gin-gonic/gin"
+	"log"
 	"openid/library/apiutil"
 	"openid/library/codeutil"
 	"openid/library/mailutil"
@@ -18,27 +19,25 @@ import (
 func RegisterSendCode(c *gin.Context) {
 	email := c.PostForm("email")
 
-	api := &apiutil.Api{
-		Ctx: c,
-	}
+	api := apiutil.New(c)
 	// verify email by re
 	if !tool.IsEmail(email) {
-		api.Out(false, "invalid email", gin.H{})
+		api.Fail("invalid email")
 		return
 	}
 
 	// 防止频繁发送验证码
 	if beacon, err := mailutil.CheckBeacon(c, email); beacon || err != nil {
-		api.Out(false, "code send too frequently", gin.H{})
+		api.Fail("code send too frequently")
 		return
 	}
 	// check mail exists
 	if exists, err := userutil.CheckEmail(email); err != nil {
-		api.Out(false, "server error", gin.H{})
+		api.Fail("server error")
 		return
 	} else {
 		if exists {
-			api.Out(false, "email already exists", gin.H{})
+			api.Fail("email already exists")
 			return
 		}
 	}
@@ -59,12 +58,12 @@ func RegisterSendCode(c *gin.Context) {
 	}
 	if err := queueutil.Q.Publish("mail", string(_msg), 0); err != nil {
 		coder.Consume("register", email) // 删除code
-		api.Out(false, "send code failed", gin.H{})
+		api.Fail("send code failed")
 		return
 	}
 	_ = mailutil.CreateBeacon(c, email, 120)
 
-	api.Out(true, "code send success", gin.H{})
+	api.Success("code send success")
 }
 
 // RegisterSubmit
@@ -75,33 +74,31 @@ func RegisterSubmit(c *gin.Context) {
 	username := c.PostForm("username")
 	password := c.PostForm("password")
 
-	api := &apiutil.Api{
-		Ctx: c,
-	}
+	api := apiutil.New(c)
 	// 合法检测
 	if !tool.IsEmail(email) {
-		api.Out(false, "非法的邮箱", gin.H{})
+		api.Fail("非法的邮箱")
 		return
 	}
 	if !tool.IsUserName(username) {
-		api.Out(false, "非法的用户名", gin.H{})
+		api.Fail("非法的用户名")
 		return
 	}
 	if !tool.IsPassword(password) {
-		api.Out(false, "密码应在6～128位", gin.H{})
+		api.Fail("密码应在8～64位")
 		return
 	}
 
 	// 验证码检测
 	coder := &codeutil.VerifyCode{}
 	if pass, err := coder.Check("register", email, verifyCode); !pass || err != nil {
-		api.Out(false, "invalid code", gin.H{})
+		api.Fail("invalid code")
 		return
 	}
 
 	// 重复检测
 	if success, msg := userutil.RegisterCheck(username, email); !success {
-		api.Out(false, msg, gin.H{})
+		api.Fail(msg)
 		return
 	}
 
@@ -115,14 +112,16 @@ func RegisterSubmit(c *gin.Context) {
 	// insert
 	_db, err := mysqlutil.D.Prepare("INSERT INTO `account` (`username`,`password`,`salt`,`email`,`regTime`,`regIp`,`lastTime`,`lastIp`) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")
 	if err != nil {
-		api.Out(false, "register failed", gin.H{})
+		log.Printf("[ERROR] RegisterSubmit %s", err.Error())
+		api.Fail("register failed")
 		return
 	}
 	_, err = _db.Query(username, pwd, salt, email, timestamp, userIp, timestamp, userIp)
 	if err != nil {
-		api.Out(false, "register failed", gin.H{})
+		log.Printf("[ERROR] RegisterSubmit %s", err.Error())
+		api.Fail("register failed")
 		return
 	}
 	coder.Consume("register", email)
-	api.Out(true, "success", gin.H{})
+	api.Success("success")
 }
