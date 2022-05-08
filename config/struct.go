@@ -34,4 +34,7 @@ type Config struct {
 	Jwt struct {
 		Secret string `yaml:"Secret"`
 	} `yaml:"Jwt"`
+	Developer struct {
+		AppLimit int `yaml:"AppLimit"`
+	} `yaml:"Developer"`
 }

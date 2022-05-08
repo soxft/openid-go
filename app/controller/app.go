@@ -18,6 +18,11 @@ func AppCreate(c *gin.Context) {
 		return
 	}
 	// 创建应用
+	if success, err := apputil.CreateApp(c.GetInt("userId"), appName); !success {
+		api.Fail(err.Error())
+		return
+	}
+
 	api.Success("创建应用成功")
 }
 
