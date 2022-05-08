@@ -22,10 +22,10 @@ func Init(r *gin.Engine) {
 		}
 
 		// register
-		reg := r.Group("/register")
+		register := r.Group("/register")
 		{
-			reg.POST("/sendCode", controller.RegisterSendCode)
-			reg.POST("/submit", controller.RegisterSubmit)
+			register.POST("/code", controller.RegisterCode)
+			register.POST("/", controller.RegisterSubmit)
 		}
 		// login
 		r.POST("/login", controller.Login)
@@ -35,6 +35,9 @@ func Init(r *gin.Engine) {
 			user.Use(middleware.AuthPermission())
 			user.GET("/status", controller.UserStatus)
 			user.GET("/info", controller.UserInfo)
+			user.PATCH("/password/update", controller.UserPasswordUpdate)
+			user.POST("/email/update/code", controller.UserEmailUpdateCode)
+			user.PATCH("/email/update", controller.UserEmailUpdate)
 		}
 
 		app := r.Group("/app")
@@ -45,6 +48,12 @@ func Init(r *gin.Engine) {
 			app.PUT("/id/:appId", controller.AppEdit)
 			app.DELETE("/id/:appId", controller.AppDel)
 			app.GET("/id/:appId", controller.AppInfo)
+		}
+
+		forget := r.Group("/forget")
+		{
+			forget.POST("/password/code", controller.ForgetPasswordCode)
+			forget.PATCH("/password/update", controller.ForgetPasswordUpdate)
 		}
 
 		v1 := r.Group("/v1")

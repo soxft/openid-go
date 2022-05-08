@@ -14,9 +14,10 @@ import (
 	"time"
 )
 
-// RegisterSendCode
+// RegisterCode
 // @description send code to email
-func RegisterSendCode(c *gin.Context) {
+// @route POST /register/code
+func RegisterCode(c *gin.Context) {
 	email := c.PostForm("email")
 
 	api := apiutil.New(c)
@@ -68,6 +69,7 @@ func RegisterSendCode(c *gin.Context) {
 
 // RegisterSubmit
 // @description do register
+// @route POST /register/
 func RegisterSubmit(c *gin.Context) {
 	email := c.PostForm("email")
 	verifyCode := c.PostForm("code")

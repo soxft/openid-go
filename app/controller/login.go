@@ -9,24 +9,22 @@ import (
 func Login(c *gin.Context) {
 	username := c.PostForm("username")
 	password := c.PostForm("password")
-	api := &apiutil.Api{
-		Ctx: c,
-	}
+	api := apiutil.New(c)
 	if len(username) == 0 || len(password) == 0 {
-		api.Out(false, "用户名或密码不能为空", gin.H{})
+		api.Fail("用户名或密码不能为空")
 		return
 	}
 
 	// check username and password
 	if userId, err := userutil.CheckPassword(username, password); err != nil {
-		api.Out(false, err.Error(), gin.H{})
+		api.Fail(err.Error())
 		return
 	} else {
 		// get token
 		if token, err := userutil.GenerateJwt(userId); err != nil {
-			api.Out(false, "system error", gin.H{})
+			api.Fail("system error")
 		} else {
-			api.Out(true, "登录成功", gin.H{
+			api.SuccessWithData("登录成功", gin.H{
 				"token": token,
 			})
 		}
