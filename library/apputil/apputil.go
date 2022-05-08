@@ -77,6 +77,42 @@ func CreateApp(userId int, appName string) (bool, error) {
 	return true, nil
 }
 
+// DeleteUserApp
+// 删除用户App
+func DeleteUserApp(userId, appId int) (bool, error) {
+	// 判断是否为 该用户的app
+	if i, err := CheckIfUserApp(appId, userId); err != nil {
+		return false, err
+	} else {
+		if !i {
+			return false, errors.New("no permission")
+		}
+	}
+
+	// 开启 事物
+	db, err := mysqlutil.D.Begin()
+	if err != nil {
+		log.Printf("[ERROR] DeleteUserApp error 1: %s", err)
+		return false, errors.New("DeleteUserApp error")
+	}
+	// 删除app表内数据
+	_, err = db.Exec("DELETE FROM `app` WHERE `appId` = ?", appId)
+	if err != nil {
+		log.Printf("[ERROR] DeleteUserApp error 2: %s", err)
+		_ = db.Rollback()
+		return false, errors.New("system error")
+	}
+	// 删除openId表内数据
+	_, err = db.Exec("DELETE FROM `openId` WHERE `appId` = ?", appId)
+	if err != nil {
+		log.Printf("[ERROR] DeleteUserApp error 3: %s", err)
+		_ = db.Rollback()
+		return false, errors.New("system error")
+	}
+	_ = db.Commit()
+	return true, nil
+}
+
 // GetUserAppList
 // @description: 获取用户app列表
 func GetUserAppList(userId, limit, offset int) ([]AppBaseStruct, error) {

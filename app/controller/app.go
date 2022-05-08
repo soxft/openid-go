@@ -48,10 +48,11 @@ func AppEdit(c *gin.Context) {
 	}
 	appIdInt, err := strconv.Atoi(appId)
 	if err != nil {
-		api.Fail("非法访问 ")
+		api.Fail("非法访问")
 		return
 	}
 
+	// 判断是否为 该用户的app
 	if i, err := apputil.CheckIfUserApp(appIdInt, c.GetInt("userId")); err != nil {
 		api.Fail("system error")
 		return
@@ -79,7 +80,21 @@ func AppEdit(c *gin.Context) {
 }
 
 func AppDel(c *gin.Context) {
+	appId := c.Param("appId")
+	api := apiutil.New(c)
+	appIdInt, err := strconv.Atoi(appId)
+	if err != nil {
+		api.Fail("非法访问 ")
+	}
 
+	// delete
+	if success, err := apputil.DeleteUserApp(c.GetInt("userId"), appIdInt); !success {
+		api.Fail(err.Error())
+	} else if err != nil {
+		api.Fail("system error")
+	} else {
+		api.Success("删除成功")
+	}
 }
 
 func AppInfo(c *gin.Context) {
