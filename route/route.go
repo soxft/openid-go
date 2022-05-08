@@ -42,6 +42,9 @@ func Init(r *gin.Engine) {
 			app.Use(middleware.AuthPermission())
 			app.GET("/list", controller.AppGetList)
 			app.POST("/create", controller.AppCreate)
+			app.PUT("/id/:appId", controller.AppEdit)
+			app.DELETE("/id/:appId", controller.AppDel)
+			app.GET("/id/:appId", controller.AppInfo)
 		}
 
 		v1 := r.Group("/v1")

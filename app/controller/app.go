@@ -2,8 +2,10 @@ package controller
 
 import (
 	"github.com/gin-gonic/gin"
+	"log"
 	"openid/library/apiutil"
 	"openid/library/apputil"
+	"openid/process/mysqlutil"
 	"strconv"
 )
 
@@ -26,11 +28,61 @@ func AppCreate(c *gin.Context) {
 	api.Success("创建应用成功")
 }
 
+// AppEdit
+// @description: 编辑应用
+// @route: PUT /app/:id
 func AppEdit(c *gin.Context) {
+	appId := c.Param("appId")
+	appName := c.PostForm("app_name")
+	appGateway := c.PostForm("app_gateway")
+	api := apiutil.New(c)
 
+	// 参数合法性检测
+	if !apputil.CheckName(appName) {
+		api.Fail("应用名称不合法")
+		return
+	}
+	if !apputil.CheckGateway(appGateway) {
+		api.Fail("应用网关不合法")
+		return
+	}
+	appIdInt, err := strconv.Atoi(appId)
+	if err != nil {
+		api.Fail("非法访问 ")
+		return
+	}
+
+	if i, err := apputil.CheckIfUserApp(appIdInt, c.GetInt("userId")); err != nil {
+		api.Fail("system error")
+		return
+	} else {
+		if !i {
+			api.Fail("没有权限")
+			return
+		}
+	}
+
+	// do change
+	db, err := mysqlutil.D.Prepare("UPDATE `app` SET `appName` = ?, `appGateway` = ? WHERE `appId` = ?")
+	if err != nil {
+		log.Printf("[ERROR] mysqlutil.D.Prepare err: %v", err)
+		api.Fail("system error")
+		return
+	}
+	_, err = db.Exec(appName, appGateway, appIdInt)
+	if err != nil {
+		log.Printf("[ERROR] db.Exec err: %v", err)
+		api.Fail("system error")
+		return
+	}
+	api.Success("修改成功")
 }
 
 func AppDel(c *gin.Context) {
+
+}
+
+func AppInfo(c *gin.Context) {
 
 }
 
@@ -39,7 +91,7 @@ func AppDel(c *gin.Context) {
 // @route GET /app/list
 func AppGetList(c *gin.Context) {
 	pageTmp := c.DefaultQuery("page", "1")
-	limitTmp := c.DefaultQuery("limit", "10")
+	limitTmp := c.DefaultQuery("per_page", "10")
 	api := apiutil.New(c)
 
 	var err error

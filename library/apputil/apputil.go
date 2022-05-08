@@ -3,6 +3,7 @@ package apputil
 import (
 	"database/sql"
 	"errors"
+	"golang.org/x/net/idna"
 	"html"
 	"log"
 	"math/rand"
@@ -14,6 +15,8 @@ import (
 	"time"
 )
 
+// CheckName
+// 检测应用名称合法性
 func CheckName(name string) bool {
 	if html.EscapeString(name) != name {
 		return false
@@ -24,7 +27,25 @@ func CheckName(name string) bool {
 	return true
 }
 
+// CheckGateway
+// 检测应用网关合法性
+func CheckGateway(gateway string) bool {
+	// 检测是否为合法的domain
+	domain, err := idna.Punycode.ToASCII(gateway)
+	if err != nil {
+		log.Printf("[ERROR] CheckGateway %s", err.Error())
+		return false
+	}
+	if !tool.IsDomain(domain) {
+		return false
+	}
+	return true
+}
+
 func CreateApp(userId int, appName string) (bool, error) {
+	if userId == 0 {
+		return false, errors.New("userId is invalid")
+	}
 	if !CheckName(appName) {
 		return false, errors.New("app name is not valid")
 	}
@@ -120,6 +141,30 @@ func generateAppId() (string, error) {
 		}
 		return appId, nil
 	}
+}
+
+// CheckIfUserApp
+// 判断是否为该用户的app
+func CheckIfUserApp(appId, userId int) (bool, error) {
+	db, err := mysqlutil.D.Prepare("SELECT `userId` FROM `app` WHERE `appId` = ?")
+	if err != nil {
+		log.Printf("[ERROR] CheckIfUserApp error: %s", err)
+		return false, errors.New("CheckIfUserApp error")
+	}
+	var userIds int
+	err = db.QueryRow(appId).Scan(&userIds)
+	if err != nil {
+		// 无数据
+		if err == sql.ErrNoRows {
+			return false, nil
+		}
+		log.Printf("[ERROR] CheckIfUserApp error: %s", err)
+		return false, errors.New("CheckIfUserApp error")
+	}
+	if userIds != userId {
+		return false, nil
+	}
+	return true, nil
 }
 
 // GenerateAppSecret

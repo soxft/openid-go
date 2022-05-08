@@ -18,3 +18,8 @@ func IsPassword(password string) bool {
 	}
 	return true
 }
+
+func IsDomain(domain string) bool {
+	b, _ := regexp.MatchString("^[a-zA-Z0-9][a-zA-Z0-9-]{0,61}[a-zA-Z0-9]\\.[a-zA-Z.]{2,6}$", domain)
+	return b
+}
