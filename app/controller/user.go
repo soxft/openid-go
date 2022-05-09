@@ -2,8 +2,12 @@ package controller
 
 import (
 	"github.com/gin-gonic/gin"
+	"log"
 	"openid/library/apiutil"
+	"openid/library/tool"
 	"openid/library/userutil"
+	"openid/process/mysqlutil"
+	"time"
 )
 
 // UserStatus
@@ -35,7 +39,38 @@ func UserInfo(c *gin.Context) {
 // @description 修改用户密码
 // @router PATCH /user/password/update
 func UserPasswordUpdate(c *gin.Context) {
+	oldPassword := c.PostForm("old_password")
+	newPassword := c.PostForm("new_password")
+	userId := c.GetInt("userId")
+	api := apiutil.New(c)
 
+	if !tool.IsPassword(newPassword) {
+		api.Fail("密码应在8～64位")
+		return
+	}
+	// verify old password
+	if right, err := userutil.CheckPasswordByUserId(userId, oldPassword); err != nil {
+		api.Fail(err.Error())
+		return
+	} else if !right {
+		api.Fail("旧密码错误")
+		return
+	}
+
+	// change password
+	salt := userutil.GenerateSalt()
+	passwordDb := tool.Sha1(newPassword + salt)
+	if res, err := mysqlutil.D.Exec("UPDATE `account` SET `password` = ?, `salt` = ? WHERE `id` = ?", passwordDb, salt, userId); err != nil {
+		log.Printf("[ERROR] UserPasswordUpdate %v", err)
+		api.Fail("system error")
+		return
+	} else if rows, _ := res.RowsAffected(); rows == 0 {
+		api.Fail("用户不存在")
+		return
+	}
+	// make jwt token expire
+	_ = userutil.SetUserJwtExpire(c.GetString("username"), time.Now().Unix())
+	api.Success("修改成功")
 }
 
 // UserEmailUpdateCode

@@ -119,6 +119,23 @@ func CheckJwt(jwt string) (UserInfo, error) {
 	return userInfo, nil
 }
 
+// SetUserJwtExpire
+// @description 修改密码等操作后 使用户所有的jwt token过期
+func SetUserJwtExpire(username string, expire int64) error {
+	_redis := redisutil.R.Get()
+	defer func(_redis redis.Conn) {
+		_ = _redis.Close()
+	}(_redis)
+
+	_redisKey := config.RedisPrefix + ":jti:expire:" + tool.Md5(username)
+	_, err := _redis.Do("SET", _redisKey, expire)
+	if err != nil {
+		log.Printf("[ERROR] SetUserJwtExpire: %s", err.Error())
+		return errors.New("set user jwt expire error")
+	}
+	return nil
+}
+
 // checkJti
 func checkJti(jti string, iat int64) (UserInfo, error) {
 	_redis := redisutil.R.Get()

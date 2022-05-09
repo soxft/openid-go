@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"github.com/gin-gonic/gin"
-	"log"
 	"math"
 	"openid/library/apiutil"
 	"openid/library/userutil"
@@ -38,7 +37,6 @@ func AuthPermission() gin.HandlerFunc {
 			return
 		}
 		if userInfo, err := userutil.CheckJwt(token); err != nil {
-			log.Printf("[ERROR] CheckJwt error: %s", err)
 			api.Abort401("Unauthorized", 4)
 			return
 		} else {

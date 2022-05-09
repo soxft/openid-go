@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"github.com/gomodule/redigo/redis"
+	"log"
 	"openid/config"
 	"openid/library/tool"
 	"openid/process/mysqlutil"
@@ -21,27 +22,25 @@ func GenerateSalt() string {
 }
 
 func RegisterCheck(username, email string) (bool, string) {
-	if exists, err := CheckUserName(username); err != nil {
+	if exists, err := CheckUserNameExists(username); err != nil {
 		return false, "server error"
 	} else {
 		if exists {
 			return false, "用户名已存在"
 		}
 	}
-	if exists, err := CheckEmail(email); err != nil {
+	if exists, err := CheckEmailExists(email); err != nil {
 		return false, "server error"
-	} else {
-		if exists {
-			return false, "邮箱已存在"
-		}
+	} else if exists {
+		return false, "邮箱已存在"
 	}
 
 	return true, ""
 }
 
-// CheckUserName
+// CheckUserNameExists
 // @description Check username if exists in database
-func CheckUserName(username string) (bool, error) {
+func CheckUserNameExists(username string) (bool, error) {
 	row, err := mysqlutil.D.Prepare("SELECT `id` FROM `account` WHERE `username` = ?")
 	if err != nil {
 		return false, err
@@ -60,9 +59,9 @@ func CheckUserName(username string) (bool, error) {
 	return false, nil
 }
 
-// CheckEmail
+// CheckEmailExists
 // @description Check email if exists in database
-func CheckEmail(email string) (bool, error) {
+func CheckEmailExists(email string) (bool, error) {
 	row, err := mysqlutil.D.Prepare("SELECT `id` FROM `account` WHERE `email` = ?")
 	if err != nil {
 		return false, err
@@ -100,16 +99,15 @@ func CheckPassword(username, password string) (int, error) {
 		return 0, errors.New("用户名或密码错误")
 	} else if res.Err() != nil {
 		return 0, errors.New("system error")
-	} else {
-		var id int
-		var salt string
-		var passwordDb string
-		_ = res.Scan(&id, &salt, &passwordDb)
-		if tool.Sha1(password+salt) != passwordDb {
-			return 0, errors.New("用户名或密码错误")
-		}
-		return id, nil
 	}
+	var id int
+	var salt string
+	var passwordDb string
+	_ = res.Scan(&id, &salt, &passwordDb)
+	if tool.Sha1(password+salt) != passwordDb {
+		return 0, errors.New("用户名或密码错误")
+	}
+	return id, nil
 }
 
 // GetUserLast
@@ -127,4 +125,30 @@ func GetUserLast(userId int) UserLastInfo {
 	_ = redis.ScanStruct(row, &userLastInfo)
 	_ = _redis.Close()
 	return userLastInfo
+}
+
+// CheckPasswordByUserId
+// @description 通过userid验证用户password
+func CheckPasswordByUserId(userId int, password string) (bool, error) {
+	var row *sql.Stmt
+	var err error
+	row, err = mysqlutil.D.Prepare("SELECT `salt`,`password` FROM `account` WHERE `id` = ? ")
+	if err != nil {
+		log.Printf("[ERROR] CheckPasswordByUserId: %s", err.Error())
+		return false, errors.New("system error")
+	}
+	res := row.QueryRow(userId)
+	if res.Err() == sql.ErrNoRows {
+		return false, nil
+	} else if res.Err() != nil {
+		log.Printf("[ERROR] CheckPasswordByUserId: %s", res.Err())
+		return false, errors.New("system error")
+	}
+	var salt string
+	var passwordDb string
+	_ = res.Scan(&salt, &passwordDb)
+	if tool.Sha1(password+salt) != passwordDb {
+		return false, nil
+	}
+	return true, nil
 }

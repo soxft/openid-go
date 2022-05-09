@@ -33,7 +33,7 @@ func RegisterCode(c *gin.Context) {
 		return
 	}
 	// check mail exists
-	if exists, err := userutil.CheckEmail(email); err != nil {
+	if exists, err := userutil.CheckEmailExists(email); err != nil {
 		api.Fail("server error")
 		return
 	} else {
@@ -109,7 +109,7 @@ func RegisterSubmit(c *gin.Context) {
 	timestamp := time.Now().Unix()
 
 	salt := userutil.GenerateSalt()
-	pwd := tool.Sha1(salt + password)
+	pwd := tool.Sha1(password + salt)
 
 	// insert
 	_db, err := mysqlutil.D.Prepare("INSERT INTO `account` (`username`,`password`,`salt`,`email`,`regTime`,`regIp`,`lastTime`,`lastIp`) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")
