@@ -2,20 +2,13 @@ package codeutil
 
 import (
 	"github.com/gomodule/redigo/redis"
+	"math/rand"
 	"openid/config"
-	"openid/library/tool"
+	"openid/library/toolutil"
 	"openid/process/redisutil"
+	"strconv"
+	"time"
 )
-
-type Coder interface {
-	Create(length int) string
-	Save(topic string, timeout int64, email string, code string) error
-	Check(topic string, email string, code string) (bool, error)
-	Consume(topic string, email string)
-}
-
-type VerifyCode struct {
-}
 
 func New() *VerifyCode {
 	return &VerifyCode{}
@@ -24,7 +17,13 @@ func New() *VerifyCode {
 // Create
 // @description: create verify code
 func (c VerifyCode) Create(length int) string {
-	return tool.RandStr(length)
+	rand.Seed(time.Now().UnixNano() + int64(rand.Intn(100)))
+
+	var code string
+	for i := 0; i < length; i++ {
+		code += strconv.Itoa(rand.Intn(10))
+	}
+	return code
 }
 
 // Save
@@ -35,8 +34,8 @@ func (c VerifyCode) Save(topic string, email string, code string, timeout int64)
 		_ = _redis.Close()
 	}(_redis)
 
-	redisKey := config.C.Redis.Prefix + ":code:" + topic + ":" + tool.Md5(email)
-	if _, err := _redis.Do("SETEX", redisKey, timeout, tool.Md5(code)); err != nil {
+	redisKey := config.RedisPrefix + ":code:" + topic + ":" + toolutil.Md5(email)
+	if _, err := _redis.Do("SETEX", redisKey, timeout, toolutil.Md5(code)); err != nil {
 		return err
 	}
 	return nil
@@ -50,11 +49,11 @@ func (c VerifyCode) Check(topic string, email string, code string) (bool, error)
 		_ = _redis.Close()
 	}(_redis)
 
-	redisKey := config.C.Redis.Prefix + ":code:" + topic + ":" + tool.Md5(email)
+	redisKey := config.RedisPrefix + ":code:" + topic + ":" + toolutil.Md5(email)
 	if realCode, err := redis.String(_redis.Do("GET", redisKey)); err != nil {
 		return false, err
 	} else {
-		if realCode == tool.Md5(code) {
+		if realCode == toolutil.Md5(code) {
 			// delete key
 			return true, nil
 		}
@@ -70,6 +69,6 @@ func (c VerifyCode) Consume(topic string, email string) {
 		_ = _redis.Close()
 	}(_redis)
 
-	redisKey := config.C.Redis.Prefix + ":code:" + topic + ":" + tool.Md5(email)
+	redisKey := config.RedisPrefix + ":code:" + topic + ":" + toolutil.Md5(email)
 	_, _ = _redis.Do("DEL", redisKey)
 }

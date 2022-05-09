@@ -4,7 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gomodule/redigo/redis"
 	"openid/config"
-	"openid/library/tool"
+	"openid/library/toolutil"
 	"openid/process/redisutil"
 )
 
@@ -20,7 +20,7 @@ func CreateBeacon(c *gin.Context, mail string, timeout int) error {
 	redisPrefix := config.C.Redis.Prefix
 
 	ipKey := redisPrefix + ":beacon:ip:" + unique
-	mailKey := redisPrefix + ":beacon:mail:" + tool.Md5(mail)
+	mailKey := redisPrefix + ":beacon:mail:" + toolutil.Md5(mail)
 	_, _ = _redis.Do("SETEX", ipKey, timeout, "1")
 	_, _ = _redis.Do("SETEX", mailKey, timeout, "1")
 	return nil
@@ -41,7 +41,7 @@ func CheckBeacon(c *gin.Context, mail string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	mailExists, err := _redis.Do("EXISTS", redisPrefix+":beacon:mail:"+tool.Md5(mail))
+	mailExists, err := _redis.Do("EXISTS", redisPrefix+":beacon:mail:"+toolutil.Md5(mail))
 	if err != nil {
 		return false, err
 	}
@@ -55,5 +55,5 @@ func generateUnique(c *gin.Context) string {
 	// get user ip
 	userIp := c.ClientIP()
 	userAgent := c.Request.UserAgent()
-	return tool.Md5(userIp + userAgent)
+	return toolutil.Md5(userIp + userAgent)
 }

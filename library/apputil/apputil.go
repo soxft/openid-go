@@ -8,7 +8,7 @@ import (
 	"log"
 	"math/rand"
 	"openid/config"
-	"openid/library/tool"
+	"openid/library/toolutil"
 	"openid/process/mysqlutil"
 	"strconv"
 	"strings"
@@ -36,7 +36,7 @@ func CheckGateway(gateway string) bool {
 		log.Printf("[ERROR] CheckGateway %s", err.Error())
 		return false
 	}
-	if !tool.IsDomain(domain) {
+	if !toolutil.IsDomain(domain) {
 		return false
 	}
 	return true
@@ -187,7 +187,7 @@ func generateAppId() (string, error) {
 	Tp := strconv.FormatInt(timeUnix, 10)
 	// 随机数种子
 	rand.Seed(time.Now().UnixNano())
-	appId := time.Now().Format("20060102") + Tp[len(Tp)-4:] + strconv.Itoa(tool.RandInt(1000, 9999))
+	appId := time.Now().Format("20060102") + Tp[len(Tp)-4:] + strconv.Itoa(toolutil.RandInt(4))
 	if exists, err := checkAppIdExists(appId); err != nil {
 		return "", err
 	} else {
@@ -225,10 +225,10 @@ func CheckIfUserApp(appId, userId int) (bool, error) {
 // GenerateAppSecret
 // 创建唯一的appSecret
 func generateAppSecret() string {
-	a := tool.Md5(time.Now().Format("20060102"))[:16]
-	b := tool.Md5(strconv.FormatInt(time.Now().UnixNano(), 10))[:16]
-	c := tool.RandStr(16)
-	d := tool.RandStr(16)
+	a := toolutil.Md5(time.Now().Format("20060102"))[:16]
+	b := toolutil.Md5(strconv.FormatInt(time.Now().UnixNano(), 10))[:16]
+	c := toolutil.RandStr(16)
+	d := toolutil.RandStr(16)
 	return strings.Join([]string{a, b, c, d}, ".")
 }
 

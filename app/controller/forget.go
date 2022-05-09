@@ -7,7 +7,7 @@ import (
 	"openid/library/apiutil"
 	"openid/library/codeutil"
 	"openid/library/mailutil"
-	"openid/library/tool"
+	"openid/library/toolutil"
 	"openid/library/userutil"
 	"openid/process/mysqlutil"
 	"openid/process/queueutil"
@@ -20,7 +20,7 @@ import (
 func ForgetPasswordCode(c *gin.Context) {
 	email := c.PostForm("email")
 	api := apiutil.New(c)
-	if !tool.IsEmail(email) {
+	if !toolutil.IsEmail(email) {
 		api.Fail("非法的邮箱格式")
 		return
 	}
@@ -40,7 +40,7 @@ func ForgetPasswordCode(c *gin.Context) {
 
 	// send mail
 	coder := codeutil.New()
-	verifyCode := coder.Create(4)
+	verifyCode := coder.Create(6)
 	_msg, _ := json.Marshal(mailutil.Mail{
 		ToAddress: email,
 		Subject:   verifyCode + " 为您的验证码",
@@ -71,12 +71,12 @@ func ForgetPasswordUpdate(c *gin.Context) {
 	newPassword := c.PostForm("new_password")
 
 	api := apiutil.New(c)
-	if !tool.IsEmail(email) {
+	if !toolutil.IsEmail(email) {
 		api.Fail("非法的邮箱格式")
 		return
 	}
 
-	if !tool.IsPassword(newPassword) {
+	if !toolutil.IsPassword(newPassword) {
 		api.Fail("密码应在8-64位之间")
 		return
 	}
@@ -90,7 +90,7 @@ func ForgetPasswordUpdate(c *gin.Context) {
 
 	// update password
 	salt := userutil.GenerateSalt()
-	passwordDb := tool.Sha1(newPassword + salt)
+	passwordDb := toolutil.Sha1(newPassword + salt)
 	if res, err := mysqlutil.D.Exec("UPDATE `account` SET `password` = ?, `salt` = ? WHERE `email` = ?", passwordDb, salt, email); err != nil {
 		log.Printf("[ERROR] UserPasswordUpdate %v", err)
 		api.Fail("system error")

@@ -1,4 +1,4 @@
-package tool
+package toolutil
 
 import (
 	"math/rand"
@@ -17,7 +17,10 @@ func RandStr(length int) string {
 	return string(result)
 }
 
-func RandInt(min, max int) int {
-	rand.Seed(time.Now().UnixNano() + int64(rand.Intn(100)))
-	return rand.Intn(max-min) + min
+func RandInt(length int) int {
+	var code int
+	for i := 0; i < 5; i++ {
+		code += rand.Intn(10)
+	}
+	return code
 }

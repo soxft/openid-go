@@ -8,7 +8,7 @@ import (
 	"github.com/gomodule/redigo/redis"
 	"log"
 	"openid/config"
-	"openid/library/tool"
+	"openid/library/toolutil"
 	"openid/process/mysqlutil"
 	"openid/process/redisutil"
 	"regexp"
@@ -54,21 +54,21 @@ func GenerateJwt(userId int) (string, error) {
 
 	header := base64.StdEncoding.EncodeToString(headerJson)
 	payload := base64.StdEncoding.EncodeToString(payloadJson)
-	signature := header + "." + payload + "." + tool.Sha256(header+"."+payload, config.C.Jwt.Secret)
+	signature := header + "." + payload + "." + toolutil.Sha256(header+"."+payload, config.C.Jwt.Secret)
 	return signature, nil
 }
 
 func getJti(user UserInfo) (string, error) {
 	JtiJson, _ := json.Marshal(map[string]string{
 		"username": user.Username,
-		"randStr":  tool.RandStr(32),
+		"randStr":  toolutil.RandStr(32),
 	})
 	_redis := redisutil.R.Get()
 	defer func(_redis redis.Conn) {
 		_ = _redis.Close()
 	}(_redis)
 
-	_jti := tool.Md5(string(JtiJson))
+	_jti := toolutil.Md5(string(JtiJson))
 	_redisKey := config.RedisPrefix + ":jti:" + _jti
 	if _, err := _redis.Do("HMSET", redis.Args{}.Add(_redisKey).AddFlat(user)...); err != nil {
 		log.Printf("[ERROR] getJti: %s", err.Error())
@@ -99,7 +99,7 @@ func CheckJwt(jwt string) (UserInfo, error) {
 	}
 	payloadJson, _ := base64.StdEncoding.DecodeString(_jwt[1])
 	signature := _jwt[2]
-	if tool.Sha256(_jwt[0]+"."+_jwt[1], config.C.Jwt.Secret) != signature {
+	if toolutil.Sha256(_jwt[0]+"."+_jwt[1], config.C.Jwt.Secret) != signature {
 		return UserInfo{}, errors.New("jwt signature error")
 	}
 	var payload JwtPayload
@@ -126,7 +126,7 @@ func SetUserJwtExpire(username string, expire int64) error {
 		_ = _redis.Close()
 	}(_redis)
 
-	_redisKey := config.RedisPrefix + ":jti:expire:" + tool.Md5(username)
+	_redisKey := config.RedisPrefix + ":jti:expire:" + toolutil.Md5(username)
 	_, err := _redis.Do("SET", _redisKey, expire)
 	if err != nil {
 		log.Printf("[ERROR] SetUserJwtExpire: %s", err.Error())
@@ -157,7 +157,7 @@ func checkJti(jti string, iat int64) (UserInfo, error) {
 	}
 	// 判断是否有过期请求 TODO
 	// 用户修改密码等操作后 会记录一个 xx:jti:expire:md5(username) 的 key 值为 修改密码时的时间戳, 用来与jwt中的iat进行比较
-	expireTime, err := redis.Int64(_redis.Do("GET", config.RedisPrefix+":jti:expire:"+tool.Md5(userInfo.Username)))
+	expireTime, err := redis.Int64(_redis.Do("GET", config.RedisPrefix+":jti:expire:"+toolutil.Md5(userInfo.Username)))
 	if err != nil && err != redis.ErrNil {
 		return UserInfo{}, errors.New("server error")
 	}

@@ -8,7 +8,7 @@ import (
 	"openid/library/apiutil"
 	"openid/library/codeutil"
 	"openid/library/mailutil"
-	"openid/library/tool"
+	"openid/library/toolutil"
 	"openid/library/userutil"
 	"openid/process/mysqlutil"
 	"openid/process/queueutil"
@@ -23,7 +23,7 @@ func RegisterCode(c *gin.Context) {
 
 	api := apiutil.New(c)
 	// verify email by re
-	if !tool.IsEmail(email) {
+	if !toolutil.IsEmail(email) {
 		api.Fail("invalid email")
 		return
 	}
@@ -79,15 +79,15 @@ func RegisterSubmit(c *gin.Context) {
 
 	api := apiutil.New(c)
 	// 合法检测
-	if !tool.IsEmail(email) {
+	if !toolutil.IsEmail(email) {
 		api.Fail("非法的邮箱")
 		return
 	}
-	if !tool.IsUserName(username) {
+	if !toolutil.IsUserName(username) {
 		api.Fail("非法的用户名")
 		return
 	}
-	if !tool.IsPassword(password) {
+	if !toolutil.IsPassword(password) {
 		api.Fail("密码应在8～64位")
 		return
 	}
@@ -117,7 +117,7 @@ func RegisterSubmit(c *gin.Context) {
 	timestamp := time.Now().Unix()
 
 	salt := userutil.GenerateSalt()
-	pwd := tool.Sha1(password + salt)
+	pwd := toolutil.Sha1(password + salt)
 
 	// insert
 	_db, err := mysqlutil.D.Prepare("INSERT INTO `account` (`username`,`password`,`salt`,`email`,`regTime`,`regIp`,`lastTime`,`lastIp`) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")

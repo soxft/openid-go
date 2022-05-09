@@ -1,4 +1,4 @@
-package tool
+package toolutil
 
 import (
 	"crypto/md5"

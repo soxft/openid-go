@@ -8,7 +8,7 @@ import (
 	"log"
 	"openid/config"
 	"openid/library/mailutil"
-	"openid/library/tool"
+	"openid/library/toolutil"
 	"openid/process/mysqlutil"
 	"openid/process/queueutil"
 	"openid/process/redisutil"
@@ -19,9 +19,9 @@ import (
 // GenerateSalt
 // @description Generate a random salt
 func GenerateSalt() string {
-	str := tool.RandStr(16)
+	str := toolutil.RandStr(16)
 	timestamp := time.Now().Unix()
-	return tool.Md5(str + strconv.FormatInt(timestamp, 10))
+	return toolutil.Md5(str + strconv.FormatInt(timestamp, 10))
 }
 
 // RegisterCheck
@@ -90,7 +90,7 @@ func CheckPassword(username, password string) (int, error) {
 	var row *sql.Stmt
 	var err error
 
-	if tool.IsEmail(username) {
+	if toolutil.IsEmail(username) {
 		row, err = mysqlutil.D.Prepare("SELECT `id`,`salt`,`password` FROM `account` WHERE `email` = ? ")
 	} else {
 		row, err = mysqlutil.D.Prepare("SELECT `id`,`salt`,`password` FROM `account` WHERE `username` = ? ")
@@ -108,7 +108,7 @@ func CheckPassword(username, password string) (int, error) {
 	var salt string
 	var passwordDb string
 	_ = res.Scan(&id, &salt, &passwordDb)
-	if tool.Sha1(password+salt) != passwordDb {
+	if toolutil.Sha1(password+salt) != passwordDb {
 		return 0, errors.New("用户名或密码错误")
 	}
 	return id, nil
@@ -151,7 +151,7 @@ func CheckPasswordByUserId(userId int, password string) (bool, error) {
 	var salt string
 	var passwordDb string
 	_ = res.Scan(&salt, &passwordDb)
-	if tool.Sha1(password+salt) != passwordDb {
+	if toolutil.Sha1(password+salt) != passwordDb {
 		return false, nil
 	}
 	return true, nil

@@ -7,7 +7,7 @@ import (
 	"openid/library/apiutil"
 	"openid/library/codeutil"
 	"openid/library/mailutil"
-	"openid/library/tool"
+	"openid/library/toolutil"
 	"openid/library/userutil"
 	"openid/process/mysqlutil"
 	"openid/process/queueutil"
@@ -48,7 +48,7 @@ func UserPasswordUpdate(c *gin.Context) {
 	userId := c.GetInt("userId")
 	api := apiutil.New(c)
 
-	if !tool.IsPassword(newPassword) {
+	if !toolutil.IsPassword(newPassword) {
 		api.Fail("密码应在8～64位")
 		return
 	}
@@ -63,7 +63,7 @@ func UserPasswordUpdate(c *gin.Context) {
 
 	// change password
 	salt := userutil.GenerateSalt()
-	passwordDb := tool.Sha1(newPassword + salt)
+	passwordDb := toolutil.Sha1(newPassword + salt)
 	if res, err := mysqlutil.D.Exec("UPDATE `account` SET `password` = ?, `salt` = ? WHERE `id` = ?", passwordDb, salt, userId); err != nil {
 		log.Printf("[ERROR] UserPasswordUpdate %v", err)
 		api.Fail("system error")
@@ -89,7 +89,7 @@ func UserEmailUpdateCode(c *gin.Context) {
 	newEmail := c.PostForm("new_email")
 	userId := c.GetInt("userId")
 	api := apiutil.New(c)
-	if !tool.IsEmail(newEmail) {
+	if !toolutil.IsEmail(newEmail) {
 		api.Fail("非法的邮箱格式")
 		return
 	}
@@ -148,7 +148,7 @@ func UserEmailUpdate(c *gin.Context) {
 	newEmail := c.PostForm("new_email")
 	code := c.PostForm("code")
 	api := apiutil.New(c)
-	if !tool.IsEmail(newEmail) {
+	if !toolutil.IsEmail(newEmail) {
 		api.Fail("非法的邮箱格式")
 		return
 	}
