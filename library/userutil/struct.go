@@ -1,5 +1,7 @@
 package userutil
 
+import "errors"
+
 type User struct {
 	Username string
 	Password string
@@ -35,3 +37,8 @@ type UserLastInfo struct {
 	LastIp   string
 	LastTime int64
 }
+
+var (
+	ErrEmailExists    = errors.New("mailExists")
+	ErrUsernameExists = errors.New("usernameExists")
+)

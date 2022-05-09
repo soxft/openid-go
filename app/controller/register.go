@@ -100,8 +100,15 @@ func RegisterSubmit(c *gin.Context) {
 	}
 
 	// 重复检测
-	if success, msg := userutil.RegisterCheck(username, email); !success {
-		api.Fail(msg)
+	if err := userutil.RegisterCheck(username, email); err != nil {
+		if err == userutil.ErrUsernameExists {
+			api.Fail("用户名已存在")
+			return
+		} else if err == userutil.ErrEmailExists {
+			api.Fail("邮箱已存在")
+			return
+		}
+		api.Fail("server error")
 		return
 	}
 

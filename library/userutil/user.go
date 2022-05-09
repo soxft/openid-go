@@ -21,21 +21,23 @@ func GenerateSalt() string {
 	return tool.Md5(str + strconv.FormatInt(timestamp, 10))
 }
 
-func RegisterCheck(username, email string) (bool, string) {
+// RegisterCheck
+// @description Check users email or user if already exists
+func RegisterCheck(username, email string) error {
 	if exists, err := CheckUserNameExists(username); err != nil {
-		return false, "server error"
+		return err
 	} else {
 		if exists {
-			return false, "用户名已存在"
+			return ErrEmailExists
 		}
 	}
 	if exists, err := CheckEmailExists(email); err != nil {
-		return false, "server error"
+		return err
 	} else if exists {
-		return false, "邮箱已存在"
+		return ErrUsernameExists
 	}
 
-	return true, ""
+	return nil
 }
 
 // CheckUserNameExists
@@ -43,20 +45,20 @@ func RegisterCheck(username, email string) (bool, string) {
 func CheckUserNameExists(username string) (bool, error) {
 	row, err := mysqlutil.D.Prepare("SELECT `id` FROM `account` WHERE `username` = ?")
 	if err != nil {
-		return false, err
+		log.Printf("CheckUserNameExists: %s", err.Error())
+		return false, errors.New("server error")
 	}
-	res, err := row.Query(username)
+	res := row.QueryRow(username)
+	var id int
+	err = res.Scan(&id)
 	if err != nil {
-		return false, err
+		if err == sql.ErrNoRows {
+			return false, nil
+		}
+		log.Printf("[ERROR] CheckEmailExists err: %v", err)
+		return false, errors.New("server error")
 	}
-	defer func(res *sql.Rows) {
-		_ = res.Close()
-	}(res)
-
-	if res.Next() {
-		return true, nil
-	}
-	return false, nil
+	return true, nil
 }
 
 // CheckEmailExists
@@ -64,20 +66,20 @@ func CheckUserNameExists(username string) (bool, error) {
 func CheckEmailExists(email string) (bool, error) {
 	row, err := mysqlutil.D.Prepare("SELECT `id` FROM `account` WHERE `email` = ?")
 	if err != nil {
-		return false, err
+		log.Printf("[ERROR] CheckEmailExists err: %v", err)
+		return false, errors.New("server error")
 	}
-	res, err := row.Query(email)
+	res := row.QueryRow(email)
+	var id int
+	err = res.Scan(&id)
 	if err != nil {
-		return false, err
+		if err == sql.ErrNoRows {
+			return false, nil
+		}
+		log.Printf("[ERROR] CheckEmailExists err: %v", err)
+		return false, errors.New("server error")
 	}
-	defer func(res *sql.Rows) {
-		_ = res.Close()
-	}(res)
-
-	if res.Next() {
-		return true, nil
-	}
-	return false, nil
+	return true, nil
 }
 
 // CheckPassword
