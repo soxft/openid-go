@@ -26,11 +26,10 @@ func GenerateSalt() string {
 func RegisterCheck(username, email string) error {
 	if exists, err := CheckUserNameExists(username); err != nil {
 		return err
-	} else {
-		if exists {
-			return ErrEmailExists
-		}
+	} else if exists {
+		return ErrEmailExists
 	}
+
 	if exists, err := CheckEmailExists(email); err != nil {
 		return err
 	} else if exists {
