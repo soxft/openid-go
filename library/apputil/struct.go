@@ -1,5 +1,7 @@
 package apputil
 
+import "errors"
+
 type AppBaseStruct struct {
 	Id      int    `json:"id"`
 	AppId   int    `json:"app_id"`
@@ -14,3 +16,7 @@ type AppFullInfoStruct struct {
 	AppGateway string `json:"app_gateway"`
 	Time       int    `json:"create_time"`
 }
+
+var (
+	ErrAppNotExist = errors.New("app not exist")
+)

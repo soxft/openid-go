@@ -79,16 +79,7 @@ func CreateApp(userId int, appName string) (bool, error) {
 
 // DeleteUserApp
 // 删除用户App
-func DeleteUserApp(userId, appId int) (bool, error) {
-	// 判断是否为 该用户的app
-	if i, err := CheckIfUserApp(appId, userId); err != nil {
-		return false, err
-	} else {
-		if !i {
-			return false, errors.New("no permission")
-		}
-	}
-
+func DeleteUserApp(appId int) (bool, error) {
 	// 开启 事物
 	db, err := mysqlutil.D.Begin()
 	if err != nil {
@@ -166,12 +157,12 @@ func GetAppInfo(appId int) (AppFullInfoStruct, error) {
 	db, err := mysqlutil.D.Prepare("SELECT `id`,`appId`,`appName`,`appSecret`,`appGateway`,`time` FROM `app` WHERE `appId` = ?")
 	if err != nil {
 		log.Printf("[ERROR] AppGetInfo error: %s", err)
-		return appInfo, errors.New("AppGetInfo error")
+		return appInfo, errors.New("server error")
 	}
 	err = db.QueryRow(appId).Scan(&appInfo.Id, &appInfo.AppId, &appInfo.AppName, &appInfo.AppSecret, &appInfo.AppGateway, &appInfo.Time)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return appInfo, errors.New("app not found")
+			return appInfo, ErrAppNotExist
 		} else {
 			log.Printf("[ERROR] GetAppInfo error: %s", err.Error())
 			return appInfo, errors.New("server error")

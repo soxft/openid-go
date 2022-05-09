@@ -32,7 +32,7 @@ func AppCreate(c *gin.Context) {
 // @description: 编辑应用
 // @route: PUT /app/:id
 func AppEdit(c *gin.Context) {
-	appId := c.Param("appId")
+	appId := c.Param("appid")
 	appName := c.PostForm("app_name")
 	appGateway := c.PostForm("app_gateway")
 	api := apiutil.New(c)
@@ -56,11 +56,9 @@ func AppEdit(c *gin.Context) {
 	if i, err := apputil.CheckIfUserApp(appIdInt, c.GetInt("userId")); err != nil {
 		api.Fail("system error")
 		return
-	} else {
-		if !i {
-			api.Fail("没有权限")
-			return
-		}
+	} else if !i {
+		api.Fail("没有权限")
+		return
 	}
 
 	// do change
@@ -83,15 +81,24 @@ func AppEdit(c *gin.Context) {
 // @description: 删除app
 // @route: DELETE /app/:id
 func AppDel(c *gin.Context) {
-	appId := c.Param("appId")
+	appId := c.Param("appid")
 	api := apiutil.New(c)
 	appIdInt, err := strconv.Atoi(appId)
 	if err != nil {
 		api.Fail("非法访问 ")
 	}
 
+	// 判断是否为 该用户的app
+	if i, err := apputil.CheckIfUserApp(appIdInt, c.GetInt("userId")); err != nil {
+		api.Fail("system error")
+		return
+	} else if !i {
+		api.Fail("没有权限")
+		return
+	}
+
 	// delete
-	if success, err := apputil.DeleteUserApp(c.GetInt("userId"), appIdInt); !success {
+	if success, err := apputil.DeleteUserApp(appIdInt); !success {
 		api.Fail(err.Error())
 	} else if err != nil {
 		api.Fail("system error")
@@ -104,7 +111,7 @@ func AppDel(c *gin.Context) {
 // @description: 获取app详细信息
 // GET /app/:id
 func AppInfo(c *gin.Context) {
-	appId := c.Param("appId")
+	appId := c.Param("appid")
 	api := apiutil.New(c)
 	appIdInt, err := strconv.Atoi(appId)
 	if err != nil {
@@ -115,14 +122,17 @@ func AppInfo(c *gin.Context) {
 	if i, err := apputil.CheckIfUserApp(appIdInt, c.GetInt("userId")); err != nil {
 		api.Fail("system error")
 		return
-	} else {
-		if !i {
-			api.Fail("没有权限")
-			return
-		}
+	} else if !i {
+		api.Fail("没有权限")
+		return
 	}
+
 	// get app info
 	if appInfo, err := apputil.GetAppInfo(appIdInt); err != nil {
+		if err == apputil.ErrAppNotExist {
+			api.Fail("应用不存在")
+			return
+		}
 		api.Fail("system error")
 		return
 	} else {

@@ -15,17 +15,18 @@ func Init(r *gin.Engine) {
 	}
 	r.Use(middleware.Cors())
 	{
-		// ping
 		{
+			// ping
 			r.HEAD("/ping", controller.Ping)
 			r.GET("/ping", controller.Ping)
-		}
 
-		// register
-		r.POST("/register/code", controller.RegisterCode)
-		r.POST("/register", controller.RegisterSubmit)
-		// login
-		r.POST("/login", controller.Login)
+			// register
+			r.POST("/register/code", controller.RegisterCode)
+			r.POST("/register", controller.RegisterSubmit)
+
+			// login
+			r.POST("/login", controller.Login)
+		}
 
 		user := r.Group("/user")
 		{
@@ -42,9 +43,9 @@ func Init(r *gin.Engine) {
 			app.Use(middleware.AuthPermission())
 			app.GET("/list", controller.AppGetList)
 			app.POST("/create", controller.AppCreate)
-			app.PUT("/id/:appId", controller.AppEdit)
-			app.DELETE("/id/:appId", controller.AppDel)
-			app.GET("/id/:appId", controller.AppInfo)
+			app.PUT("/id/:appid", controller.AppEdit)
+			app.DELETE("/id/:appid", controller.AppDel)
+			app.GET("/id/:appid", controller.AppInfo)
 		}
 
 		forget := r.Group("/forget")
@@ -56,8 +57,9 @@ func Init(r *gin.Engine) {
 		v1 := r.Group("/v1")
 		{
 			v1.GET("/login", version_one.Login)
+			v1.GET("/code", version_one.Code)
 			v1.POST("/info", version_one.Info)
-			v1.POST("/login", version_one.LoginHandler)
+			v1.GET("/app/info/:appid", version_one.AppInfo)
 		}
 
 		r.NoRoute(noRoute)

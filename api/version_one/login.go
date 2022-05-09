@@ -1,15 +1,23 @@
 package version_one
 
-import "github.com/gin-gonic/gin"
+import (
+	"github.com/gin-gonic/gin"
+)
 
 // Login
 // @description v1 登录
+// @route GET /v1/login
 func Login(c *gin.Context) {
-	c.Redirect(302, "/login?appid="+c.Query("appid")+"&redirect_uri="+c.Query("redirect_uri"))
+	c.Redirect(302, "/login?"+c.Request.URL.Query().Encode())
 }
 
-// LoginHandler
-// @description 处理登录xhr请求
-func LoginHandler(c *gin.Context) {
+// Code
+// @description 处理登录xhr请求 获取code并跳转到redirect_uri
+// @route POST /v1/info
+func Code(c *gin.Context) {
+	appId := c.Query("appid")
+	redirectUri := c.Query("redirect_uri")
+	if appId == "" || redirectUri == "" {
 
+	}
 }
