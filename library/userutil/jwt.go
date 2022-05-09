@@ -33,7 +33,6 @@ func GenerateJwt(userId int) (string, error) {
 	userRedis := UserInfo{}
 	userLast := UserLastInfo{}
 	_ = res.Scan(&userRedis.UserId, &userRedis.Username, &userRedis.Email, &userLast.LastTime, &userLast.LastIp)
-	log.Print("[INFO] GenerateToken: ", userLast)
 	_ = setUserBaseInfo(userRedis.UserId, userLast)
 
 	headerJson, _ := json.Marshal(JwtHeader{

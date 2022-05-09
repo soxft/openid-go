@@ -76,13 +76,7 @@ func UserPasswordUpdate(c *gin.Context) {
 	_ = userutil.SetUserJwtExpire(c.GetString("username"), time.Now().Unix())
 
 	// send safe notify email
-	_msg, _ := json.Marshal(mailutil.Mail{
-		ToAddress: c.GetString("email"),
-		Subject:   "您的密码已修改",
-		Content:   "您的密码已于" + time.Now().Format("2006-01-02 15:04:05") + "修改, 如果不是您本人操作, 请及时联系管理员",
-		Typ:       "passwordChangeNotify",
-	})
-	_ = queueutil.Q.Publish("mail", string(_msg), 5)
+	userutil.PasswordChangeNotify(c.GetString("email"), time.Now())
 
 	api.Success("修改成功, 请重新登录")
 }

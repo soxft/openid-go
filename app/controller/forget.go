@@ -45,7 +45,7 @@ func ForgetPasswordCode(c *gin.Context) {
 		ToAddress: email,
 		Subject:   verifyCode + " 为您的验证码",
 		Content:   "您正在申请找回密码, 您的验证码为: " + verifyCode + ", 有效期10分钟",
-		Typ:       "emailChange",
+		Typ:       "forgetPwd",
 	})
 
 	if err := coder.Save("forgetPwd", email, verifyCode, 60*10); err != nil {
@@ -99,15 +99,19 @@ func ForgetPasswordUpdate(c *gin.Context) {
 		api.Fail("用户不存在")
 		return
 	}
+	coder.Consume("forgetPwd", email)
 
-	// send safe notify email
-	_msg, _ := json.Marshal(mailutil.Mail{
-		ToAddress: c.GetString("email"),
-		Subject:   "您的密码已修改",
-		Content:   "您的密码已于" + time.Now().Format("2006-01-02 15:04:05") + "修改, 如果不是您本人操作, 请及时联系管理员",
-		Typ:       "passwordChangeNotify",
-	})
-	_ = queueutil.Q.Publish("mail", string(_msg), 5)
+	// get UserName
+	var username string
+	if err := mysqlutil.D.QueryRow("SELECT `username` FROM `account` WHERE `email` = ?", email).Scan(&username); err != nil {
+		log.Printf("[ERROR] UserPasswordUpdate %v", err)
+		api.Fail("system error")
+		return
+	}
+	_ = userutil.SetUserJwtExpire(username, time.Now().Unix())
+
+	// 修改密码安全通知
+	userutil.PasswordChangeNotify(email, time.Now())
 
 	api.Success("修改成功!")
 

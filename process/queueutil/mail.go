@@ -13,6 +13,10 @@ func Mail(msg string) {
 	if err := json.Unmarshal([]byte(msg), &mailMsg); err != nil {
 		log.Panic(err)
 	}
+	if mailMsg.ToAddress == "" {
+		log.Printf("[ERROR] Mail(%s) 空收件人", mailMsg.Typ)
+		return
+	}
 	log.Printf("[INFO] Mail(%s) %s", mailMsg.Typ, mailMsg.ToAddress)
 
 	// get mail platform

@@ -2,12 +2,15 @@ package userutil
 
 import (
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"github.com/gomodule/redigo/redis"
 	"log"
 	"openid/config"
+	"openid/library/mailutil"
 	"openid/library/tool"
 	"openid/process/mysqlutil"
+	"openid/process/queueutil"
 	"openid/process/redisutil"
 	"strconv"
 	"time"
@@ -152,4 +155,14 @@ func CheckPasswordByUserId(userId int, password string) (bool, error) {
 		return false, nil
 	}
 	return true, nil
+}
+
+func PasswordChangeNotify(email string, timestamp time.Time) {
+	_msg, _ := json.Marshal(mailutil.Mail{
+		ToAddress: email,
+		Subject:   "您的密码已修改",
+		Content:   "您的密码已于" + timestamp.Format("2006-01-02 15:04:05") + "修改, 如果不是您本人操作, 请及时联系管理员",
+		Typ:       "passwordChangeNotify",
+	})
+	_ = queueutil.Q.Publish("mail", string(_msg), 5)
 }
