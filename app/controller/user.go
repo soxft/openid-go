@@ -1,12 +1,16 @@
 package controller
 
 import (
+	"encoding/json"
 	"github.com/gin-gonic/gin"
 	"log"
 	"openid/library/apiutil"
+	"openid/library/codeutil"
+	"openid/library/mailutil"
 	"openid/library/tool"
 	"openid/library/userutil"
 	"openid/process/mysqlutil"
+	"openid/process/queueutil"
 	"time"
 )
 
@@ -70,19 +74,109 @@ func UserPasswordUpdate(c *gin.Context) {
 	}
 	// make jwt token expire
 	_ = userutil.SetUserJwtExpire(c.GetString("username"), time.Now().Unix())
-	api.Success("修改成功")
+
+	// send safe notify email
+	_msg, _ := json.Marshal(mailutil.Mail{
+		ToAddress: c.GetString("email"),
+		Subject:   "您的密码已修改",
+		Content:   "您的密码已于" + time.Now().Format("2006-01-02 15:04:05") + "修改, 如果不是您本人操作, 请及时联系管理员",
+		Typ:       "passwordChangeNotify",
+	})
+	_ = queueutil.Q.Publish("mail", string(_msg), 5)
+
+	api.Success("修改成功, 请重新登录")
 }
 
 // UserEmailUpdateCode
 // @description 发送邮箱验证码
 // @router POST /user/email/update/code
 func UserEmailUpdateCode(c *gin.Context) {
+	password := c.PostForm("password")
+	newEmail := c.PostForm("new_email")
+	userId := c.GetInt("userId")
+	api := apiutil.New(c)
+	if !tool.IsEmail(newEmail) {
+		api.Fail("非法的邮箱格式")
+		return
+	}
 
+	// verify old password
+	if right, err := userutil.CheckPasswordByUserId(userId, password); err != nil {
+		api.Fail(err.Error())
+		return
+	} else if !right {
+		api.Fail("旧密码错误")
+		return
+	}
+
+	if exist, err := userutil.CheckEmailExists(newEmail); err != nil {
+		api.Fail("system error")
+		return
+	} else if exist {
+		api.Fail("邮箱已存在")
+		return
+	}
+
+	// 防止频繁发送验证码
+	if beacon, err := mailutil.CheckBeacon(c, newEmail); beacon || err != nil {
+		api.Fail("code send too frequently")
+		return
+	}
+
+	// send mail
+	coder := codeutil.New()
+	verifyCode := coder.Create(4)
+	_msg, _ := json.Marshal(mailutil.Mail{
+		ToAddress: newEmail,
+		Subject:   verifyCode + " 为您的验证码",
+		Content:   "您正在申请修改邮箱, 您的验证码为: " + verifyCode + ", 有效期10分钟",
+		Typ:       "emailChange",
+	})
+
+	if err := coder.Save("emailChange", newEmail, verifyCode, 60*10); err != nil {
+		api.Out(false, "send code failed", gin.H{})
+		return
+	}
+	if err := queueutil.Q.Publish("mail", string(_msg), 0); err != nil {
+		coder.Consume("emailChange", newEmail) // 删除code
+		api.Fail("send code failed")
+		return
+	}
+	_ = mailutil.CreateBeacon(c, newEmail, 120)
+
+	api.Success("发送成功")
 }
 
 // UserEmailUpdate
 // @description 修改用户邮箱
 // @router PATCH /user/email/update
 func UserEmailUpdate(c *gin.Context) {
+	newEmail := c.PostForm("new_email")
+	code := c.PostForm("code")
+	api := apiutil.New(c)
+	if !tool.IsEmail(newEmail) {
+		api.Fail("非法的邮箱格式")
+		return
+	}
 
+	// verify code
+	coder := codeutil.New()
+	if pass, err := coder.Check("emailChange", newEmail, code); !pass || err != nil {
+		api.Fail("验证码错误或已过期")
+		return
+	}
+
+	// update email
+	if res, err := mysqlutil.D.Exec("UPDATE `account` SET `email` = ? WHERE `id` = ?", newEmail, c.GetInt("userId")); err != nil {
+		log.Printf("[ERROR] UserEmailUpdate %v", err)
+		api.Fail("system error")
+		return
+	} else if rows, _ := res.RowsAffected(); rows == 0 {
+		api.Fail("用户不存在")
+		return
+	}
+
+	coder.Consume("emailChange", newEmail)
+	_ = userutil.SetUserJwtExpire(c.GetString("username"), time.Now().Unix())
+	api.Success("修改成功, 请重新登录")
 }

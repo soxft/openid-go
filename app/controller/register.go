@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"github.com/gin-gonic/gin"
 	"log"
+	"openid/config"
 	"openid/library/apiutil"
 	"openid/library/codeutil"
 	"openid/library/mailutil"
@@ -44,12 +45,12 @@ func RegisterCode(c *gin.Context) {
 	}
 
 	// send Code
-	coder := &codeutil.VerifyCode{}
+	coder := codeutil.New()
 	verifyCode := coder.Create(4)
 	_msg, _ := json.Marshal(mailutil.Mail{
 		ToAddress: email,
-		Subject:   "注册验证码",
-		Content:   "您的验证码为: " + verifyCode + ", 有效期10分钟",
+		Subject:   verifyCode + " 为您的验证码",
+		Content:   "您正在注册 " + config.C.Server.Title + ". 您的验证码为: " + verifyCode + ", 有效期10分钟.",
 		Typ:       "register",
 	})
 
@@ -92,7 +93,7 @@ func RegisterSubmit(c *gin.Context) {
 	}
 
 	// 验证码检测
-	coder := &codeutil.VerifyCode{}
+	coder := codeutil.New()
 	if pass, err := coder.Check("register", email, verifyCode); !pass || err != nil {
 		api.Fail("invalid code")
 		return

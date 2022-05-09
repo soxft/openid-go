@@ -22,11 +22,8 @@ func Init(r *gin.Engine) {
 		}
 
 		// register
-		register := r.Group("/register")
-		{
-			register.POST("/code", controller.RegisterCode)
-			register.POST("/", controller.RegisterSubmit)
-		}
+		r.POST("/register/code", controller.RegisterCode)
+		r.POST("/register", controller.RegisterSubmit)
 		// login
 		r.POST("/login", controller.Login)
 

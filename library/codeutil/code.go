@@ -17,10 +17,18 @@ type Coder interface {
 type VerifyCode struct {
 }
 
+func New() *VerifyCode {
+	return &VerifyCode{}
+}
+
+// Create
+// @description: create verify code
 func (c VerifyCode) Create(length int) string {
 	return tool.RandStr(length)
 }
 
+// Save
+// @description: save verify code 存储验证码
 func (c VerifyCode) Save(topic string, email string, code string, timeout int64) error {
 	_redis := redisutil.R.Get()
 	defer func(_redis redis.Conn) {
@@ -34,6 +42,8 @@ func (c VerifyCode) Save(topic string, email string, code string, timeout int64)
 	return nil
 }
 
+// Check
+// @description: 判断验证码是否正确
 func (c VerifyCode) Check(topic string, email string, code string) (bool, error) {
 	_redis := redisutil.R.Get()
 	defer func(_redis redis.Conn) {
@@ -53,7 +63,7 @@ func (c VerifyCode) Check(topic string, email string, code string) (bool, error)
 }
 
 // Consume
-// @description: del code
+// @description: 消费(删除)验证码
 func (c VerifyCode) Consume(topic string, email string) {
 	_redis := redisutil.R.Get()
 	defer func(_redis redis.Conn) {
