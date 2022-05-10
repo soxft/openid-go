@@ -7,6 +7,7 @@ import (
 	"openid/library/apputil"
 	"openid/process/mysqlutil"
 	"strconv"
+	"strings"
 )
 
 // AppCreate
@@ -35,6 +36,8 @@ func AppEdit(c *gin.Context) {
 	appId := c.Param("appid")
 	appName := c.PostForm("app_name")
 	appGateway := c.PostForm("app_gateway")
+
+	appGateway = strings.TrimSpace(appGateway)
 	api := apiutil.New(c)
 
 	// 参数合法性检测

@@ -18,5 +18,6 @@ type AppFullInfoStruct struct {
 }
 
 var (
-	ErrAppNotExist = errors.New("app not exist")
+	ErrAppNotExist       = errors.New("app not exist")
+	ErrAppSecretNotMatch = errors.New("app secret not match")
 )

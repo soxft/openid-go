@@ -57,7 +57,7 @@ func Init(r *gin.Engine) {
 		v1 := r.Group("/v1")
 		{
 			v1.GET("/login", version_one.Login)
-			v1.GET("/code", version_one.Code)
+			v1.POST("/code", middleware.AuthPermission(), version_one.Code)
 			v1.POST("/info", version_one.Info)
 			v1.GET("/app/info/:appid", version_one.AppInfo)
 		}

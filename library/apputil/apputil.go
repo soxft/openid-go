@@ -3,13 +3,14 @@ package apputil
 import (
 	"database/sql"
 	"errors"
-	"golang.org/x/net/idna"
+	"github.com/gomodule/redigo/redis"
 	"html"
 	"log"
 	"math/rand"
 	"openid/config"
 	"openid/library/toolutil"
 	"openid/process/mysqlutil"
+	"openid/process/redisutil"
 	"strconv"
 	"strings"
 	"time"
@@ -30,14 +31,27 @@ func CheckName(name string) bool {
 // CheckGateway
 // 检测应用网关合法性
 func CheckGateway(gateway string) bool {
-	// 检测是否为合法的domain
-	domain, err := idna.Punycode.ToASCII(gateway)
-	if err != nil {
-		log.Printf("[ERROR] CheckGateway %s", err.Error())
+	if len(gateway) < 4 || len(gateway) > 200 {
 		return false
 	}
-	if !toolutil.IsDomain(domain) {
+	// 如果不包含 小数点
+	if !strings.Contains(gateway, ".") {
 		return false
+	}
+	// 是否包含特殊字符
+	if strings.ContainsAny(gateway, "~!@#$%^&*()_+=|\\{}[];':\",/<>?") {
+		return false
+	}
+	// 不能 以 . 开头 或 结尾
+	if strings.HasPrefix(gateway, ".") || strings.HasSuffix(gateway, ".") {
+		return false
+	}
+	// 以小数点分割, 每段不能超过 63 个字符
+	parts := strings.Split(gateway, ".")
+	for _, part := range parts {
+		if len(part) > 63 {
+			return false
+		}
 	}
 	return true
 }
@@ -169,6 +183,45 @@ func GetAppInfo(appId int) (AppFullInfoStruct, error) {
 		}
 	}
 	return appInfo, nil
+}
+
+// GenerateToken
+// @description: 获取token (用于跳转redirect_uri携带)
+func GenerateToken(appId, userId int) (string, error) {
+	a := toolutil.RandStr(10)
+	b := toolutil.Md5(time.Now().Format("15:04:05"))[:10]
+	c := toolutil.Md5(strconv.FormatInt(time.Now().UnixNano(), 10))[:10]
+
+	token := a + "_" + b + toolutil.RandStr(9) + c
+	token = strings.ToLower(token)
+
+	// check if exists in redis
+	_redis := redisutil.R.Get()
+	defer func(_redis redis.Conn) {
+		_ = _redis.Close()
+	}(_redis)
+
+	// 没有考虑 是否会重复 但我觉得不会重复
+	_redisKey := config.RedisPrefix + ":app:" + toolutil.Md5(strconv.Itoa(appId)) + ":" + toolutil.Md5(token)
+	if _, err := _redis.Do("SET", _redisKey, userId, "EX", 60*3); err != nil {
+		log.Printf("[ERROR] GetToken error: %s", err)
+		return "", errors.New("server error")
+	}
+
+	return token, nil
+}
+
+// CheckAppSecret
+// @description: 检查appSecret
+func CheckAppSecret(appId int, appSecret string) error {
+	appInfo, err := GetAppInfo(appId)
+	if err != nil {
+		return err
+	}
+	if appInfo.AppSecret != appSecret {
+		return ErrAppSecretNotMatch
+	}
+	return nil
 }
 
 // GenerateAppId

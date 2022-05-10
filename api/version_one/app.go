@@ -29,8 +29,9 @@ func AppInfo(c *gin.Context) {
 		return
 	} else {
 		api.SuccessWithData("success", gin.H{
-			"id":   appInfo.Id,
-			"name": appInfo.AppName,
+			"id":      appInfo.Id,
+			"name":    appInfo.AppName,
+			"gateway": appInfo.AppGateway,
 		})
 	}
 }
