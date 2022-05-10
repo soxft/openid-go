@@ -70,7 +70,7 @@ func RegisterCode(c *gin.Context) {
 
 // RegisterSubmit
 // @description do register
-// @route POST /register/
+// @route POST /register
 func RegisterSubmit(c *gin.Context) {
 	email := c.PostForm("email")
 	verifyCode := c.PostForm("code")
