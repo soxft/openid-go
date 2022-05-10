@@ -37,11 +37,9 @@ func RegisterCode(c *gin.Context) {
 	if exists, err := userutil.CheckEmailExists(email); err != nil {
 		api.Fail("server error")
 		return
-	} else {
-		if exists {
-			api.Fail("email already exists")
-			return
-		}
+	} else if exists {
+		api.Fail("email already exists")
+		return
 	}
 
 	// send Code

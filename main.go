@@ -17,7 +17,6 @@ func main() {
 
 	// init gin
 	r := gin.New()
-	r.TrustedPlatform = gin.PlatformCloudflare
 	route.Init(r)
 
 	log.Printf("Server running at %s ", config.C.Server.Addr)

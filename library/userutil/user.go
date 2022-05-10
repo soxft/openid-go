@@ -30,13 +30,13 @@ func RegisterCheck(username, email string) error {
 	if exists, err := CheckUserNameExists(username); err != nil {
 		return err
 	} else if exists {
-		return ErrEmailExists
+		return ErrUsernameExists
 	}
 
 	if exists, err := CheckEmailExists(email); err != nil {
 		return err
 	} else if exists {
-		return ErrUsernameExists
+		return ErrEmailExists
 	}
 
 	return nil
