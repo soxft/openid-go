@@ -26,7 +26,7 @@ func GenerateToken(appId, userId int) (string, error) {
 	b := toolutil.Md5(time.Now().Format("15:04:05"))[:10]
 	c := toolutil.Md5(strconv.FormatInt(time.Now().UnixNano(), 10))[:10]
 
-	token := a + "_" + b + toolutil.RandStr(9) + c
+	token := a + "." + b + c + toolutil.RandStr(9)
 	token = strings.ToLower(token)
 
 	_redisKey := getTokenRedisKey(appId, token)
@@ -51,10 +51,10 @@ func GenerateToken(appId, userId int) (string, error) {
 func generateOpenId(appId int, userId int) (string, error) {
 	a := toolutil.Md5(strconv.Itoa(appId))[:10]
 	b := toolutil.Md5(strconv.Itoa(userId))[:10]
-	c := toolutil.Md5(time.Now().Format("15:04:05"))[:10]
-	d := toolutil.Md5(strconv.FormatInt(time.Now().UnixNano(), 10))[:10]
-	e := toolutil.RandStr(22)
-	openId := a + "_" + b + "_" + c + d + e
+	d := toolutil.Md5(strconv.FormatInt(time.Now().UnixNano(), 10))
+	c := toolutil.Md5(toolutil.RandStr(16))
+
+	openId := a + "." + b + "." + c + d
 	openId = strings.ToLower(openId)
 
 	db, _ := mysqlutil.D.Prepare("SELECT `id` FROM `openId` WHERE `openId` = ? ")
@@ -87,10 +87,10 @@ func generateOpenId(appId int, userId int) (string, error) {
 func generateUniqueId(userId, devUserId int) (string, error) {
 	a := toolutil.Md5(strconv.Itoa(devUserId))[:10]
 	b := toolutil.Md5(strconv.Itoa(userId))[:10]
-	c := toolutil.Md5(time.Now().Format("15:04:05"))[:10]
-	d := toolutil.Md5(strconv.FormatInt(time.Now().UnixNano(), 10))[:10]
-	e := toolutil.RandStr(22)
-	uniqueId := a + "_" + b + "_" + c + d + e
+	d := toolutil.Md5(strconv.FormatInt(time.Now().UnixNano(), 10))
+	c := toolutil.Md5(toolutil.RandStr(16))
+
+	uniqueId := a + "." + b + "." + c + d
 	uniqueId = strings.ToLower(uniqueId)
 
 	db, _ := mysqlutil.D.Prepare("SELECT `id` FROM `uniqueId` WHERE `uniqueId` = ? ")
