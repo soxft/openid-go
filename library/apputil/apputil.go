@@ -3,14 +3,12 @@ package apputil
 import (
 	"database/sql"
 	"errors"
-	"github.com/gomodule/redigo/redis"
 	"html"
 	"log"
 	"math/rand"
 	"openid/config"
 	"openid/library/toolutil"
 	"openid/process/mysqlutil"
-	"openid/process/redisutil"
 	"strconv"
 	"strings"
 	"time"
@@ -168,12 +166,12 @@ func GetUserAppCount(userId int) (int, error) {
 
 func GetAppInfo(appId int) (AppFullInfoStruct, error) {
 	var appInfo AppFullInfoStruct
-	db, err := mysqlutil.D.Prepare("SELECT `id`,`appId`,`appName`,`appSecret`,`appGateway`,`time` FROM `app` WHERE `appId` = ?")
+	db, err := mysqlutil.D.Prepare("SELECT `id`,`userId`,`appId`,`appName`,`appSecret`,`appGateway`,`time` FROM `app` WHERE `appId` = ?")
 	if err != nil {
 		log.Printf("[ERROR] AppGetInfo error: %s", err)
 		return appInfo, errors.New("server error")
 	}
-	err = db.QueryRow(appId).Scan(&appInfo.Id, &appInfo.AppId, &appInfo.AppName, &appInfo.AppSecret, &appInfo.AppGateway, &appInfo.Time)
+	err = db.QueryRow(appId).Scan(&appInfo.Id, &appInfo.AppUserId, &appInfo.AppId, &appInfo.AppName, &appInfo.AppSecret, &appInfo.AppGateway, &appInfo.Time)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return appInfo, ErrAppNotExist
@@ -183,32 +181,6 @@ func GetAppInfo(appId int) (AppFullInfoStruct, error) {
 		}
 	}
 	return appInfo, nil
-}
-
-// GenerateToken
-// @description: 获取token (用于跳转redirect_uri携带)
-func GenerateToken(appId, userId int) (string, error) {
-	a := toolutil.RandStr(10)
-	b := toolutil.Md5(time.Now().Format("15:04:05"))[:10]
-	c := toolutil.Md5(strconv.FormatInt(time.Now().UnixNano(), 10))[:10]
-
-	token := a + "_" + b + toolutil.RandStr(9) + c
-	token = strings.ToLower(token)
-
-	// check if exists in redis
-	_redis := redisutil.R.Get()
-	defer func(_redis redis.Conn) {
-		_ = _redis.Close()
-	}(_redis)
-
-	// 没有考虑 是否会重复 但我觉得不会重复
-	_redisKey := config.RedisPrefix + ":app:" + toolutil.Md5(strconv.Itoa(appId)) + ":" + toolutil.Md5(token)
-	if _, err := _redis.Do("SET", _redisKey, userId, "EX", 60*3); err != nil {
-		log.Printf("[ERROR] GetToken error: %s", err)
-		return "", errors.New("server error")
-	}
-
-	return token, nil
 }
 
 // CheckAppSecret

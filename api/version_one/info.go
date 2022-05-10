@@ -2,6 +2,7 @@ package version_one
 
 import (
 	"github.com/gin-gonic/gin"
+	"openid/api/version_one/helper"
 	"openid/library/apiutil"
 	"openid/library/apputil"
 	"strconv"
@@ -33,5 +34,27 @@ func Info(c *gin.Context) {
 		api.Fail(err.Error())
 		return
 	}
+
+	// 检测token是否正确 并获取userId
+	userId, err := helper.GetUserIdByToken(appIdInt, token)
+	if err != nil {
+		if err == helper.ErrTokenNotExists {
+			api.Fail("Token not exists")
+			return
+		}
+		api.Fail(err.Error())
+		return
+	}
+	userIds, err := helper.GetUserIds(appIdInt, userId)
+	if err != nil {
+		api.Fail(err.Error())
+		return
+	}
+	// delete token
+	_ = helper.DeleteToken(appIdInt, token)
+	api.SuccessWithData("success", gin.H{
+		"openid":   userIds.OpenId,
+		"uniqueId": userIds.UniqueId,
+	})
 
 }
