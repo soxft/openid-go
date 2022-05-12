@@ -3,9 +3,10 @@ package apputil
 import "errors"
 
 type AppBaseStruct struct {
-	Id      int    `json:"id"`
-	AppId   int    `json:"app_id"`
-	AppName string `json:"app_name"`
+	Id         int    `json:"id"`
+	AppId      int    `json:"app_id"`
+	AppName    string `json:"app_name"`
+	CreateTime string `json:"create_time"`
 }
 
 type AppFullInfoStruct struct {

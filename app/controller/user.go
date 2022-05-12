@@ -31,7 +31,7 @@ func UserInfo(c *gin.Context) {
 
 	userId := c.GetInt("userId")
 	userLast := userutil.GetUserLast(userId)
-	api.SuccessWithData("userInfo", gin.H{
+	api.SuccessWithData("success", gin.H{
 		"userId":   userId,
 		"username": c.GetString("username"),
 		"email":    c.GetString("email"),
@@ -171,6 +171,7 @@ func UserEmailUpdate(c *gin.Context) {
 	}
 
 	coder.Consume("emailChange", newEmail)
+	userutil.EmailChangeNotify(c.GetString("email"), time.Now())
 	_ = userutil.SetUserJwtExpire(c.GetString("username"), time.Now().Unix())
 	api.Success("修改成功, 请重新登录")
 }

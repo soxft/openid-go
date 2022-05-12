@@ -166,3 +166,13 @@ func PasswordChangeNotify(email string, timestamp time.Time) {
 	})
 	_ = queueutil.Q.Publish("mail", string(_msg), 5)
 }
+
+func EmailChangeNotify(email string, timestamp time.Time) {
+	_msg, _ := json.Marshal(mailutil.Mail{
+		ToAddress: email,
+		Subject:   "您的邮箱已修改",
+		Content:   "您的邮箱已于" + timestamp.Format("2006-01-02 15:04:05") + "修改, 如果不是您本人操作, 请及时联系管理员",
+		Typ:       "emailChangeNotify",
+	})
+	_ = queueutil.Q.Publish("mail", string(_msg), 5)
+}
