@@ -33,6 +33,7 @@ func Init(r *gin.Engine) {
 			user.Use(middleware.AuthPermission())
 			user.GET("/status", controller.UserStatus)
 			user.GET("/info", controller.UserInfo)
+			user.POST("/logout", controller.UserLogout)
 			user.PATCH("/password/update", controller.UserPasswordUpdate)
 			user.POST("/email/update/code", controller.UserEmailUpdateCode)
 			user.PATCH("/email/update", controller.UserEmailUpdate)

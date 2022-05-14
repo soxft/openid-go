@@ -39,6 +39,14 @@ func UserInfo(c *gin.Context) {
 	})
 }
 
+// UserLogout
+// @description 用户退出
+func UserLogout(c *gin.Context) {
+	api := apiutil.New(c)
+	_ = userutil.DelJti(c.GetString("token"))
+	api.Success("success")
+}
+
 // UserPasswordUpdate
 // @description 修改用户密码
 // @router PATCH /user/password/update

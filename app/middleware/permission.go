@@ -23,6 +23,7 @@ func AuthPermission() gin.HandlerFunc {
 			c.Set("userId", userInfo.UserId)
 			c.Set("username", userInfo.Username)
 			c.Set("email", userInfo.Email)
+			c.Set("token", token)
 		}
 		c.Next()
 	}

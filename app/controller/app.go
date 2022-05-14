@@ -190,7 +190,7 @@ func AppGetList(c *gin.Context) {
 	}
 
 	api.SuccessWithData("success", gin.H{
-		"counts": appCounts,
-		"list":   appList,
+		"total": appCounts,
+		"list":  appList,
 	})
 }

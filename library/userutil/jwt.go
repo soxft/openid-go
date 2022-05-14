@@ -41,7 +41,7 @@ func GenerateJwt(userId int) (string, error) {
 	})
 
 	var Jti string
-	if Jti, err = getJti(userRedis); err != nil {
+	if Jti, err = generateJti(userRedis); err != nil {
 		log.Printf("[ERROR] GenerateToken: %s", err.Error())
 		return "", err
 	}
@@ -58,7 +58,7 @@ func GenerateJwt(userId int) (string, error) {
 	return signature, nil
 }
 
-func getJti(user UserInfo) (string, error) {
+func generateJti(user UserInfo) (string, error) {
 	JtiJson, _ := json.Marshal(map[string]string{
 		"username": user.Username,
 		"randStr":  toolutil.RandStr(32),
@@ -116,6 +116,31 @@ func CheckJwt(jwt string) (UserInfo, error) {
 	setExpire(":jti:"+payload.Jti, ":user:last:"+strconv.Itoa(userInfo.UserId))
 
 	return userInfo, nil
+}
+
+// DelJti
+// @description check if JTI exists
+func DelJti(jwt string) error {
+	_redis := redisutil.R.Get()
+	defer func(_redis redis.Conn) {
+		_ = _redis.Close()
+	}(_redis)
+	// get jti from jwt
+	_jwt := strings.Split(jwt, ".")
+	if len(_jwt) != 3 {
+		return errors.New("jwt format error")
+	}
+
+	if payloadJson, err := base64.StdEncoding.DecodeString(_jwt[1]); err != nil {
+		return errors.New("jwt payload error")
+	} else {
+		var payload JwtPayload
+		if err = json.Unmarshal(payloadJson, &payload); err != nil {
+			return errors.New("jwt payload error")
+		}
+		_, err = _redis.Do("DEL", config.RedisPrefix+":jti:"+payload.Jti)
+		return err
+	}
 }
 
 // SetUserJwtExpire
