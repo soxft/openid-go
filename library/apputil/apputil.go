@@ -120,7 +120,7 @@ func DeleteUserApp(appId int) (bool, error) {
 // @description: 获取用户app列表
 func GetUserAppList(userId, limit, offset int) ([]AppBaseStruct, error) {
 	// 开始获取
-	db, err := mysqlutil.D.Prepare("SELECT `id`,`appId`,`appName`,`time` FROM `app` WHERE `userId` = ? LIMIT ? OFFSET ?")
+	db, err := mysqlutil.D.Prepare("SELECT `id`,`appId`,`appName`,`time` FROM `app` WHERE `userId` = ? ORDER BY `id` DESC LIMIT ? OFFSET ?")
 	if err != nil {
 		log.Printf("[ERROR] AppGetList error: %s", err)
 		return nil, errors.New("AppGetList error")
