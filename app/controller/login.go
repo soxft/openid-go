@@ -21,7 +21,7 @@ func Login(c *gin.Context) {
 		return
 	} else {
 		// get token
-		if token, err := userutil.GenerateJwt(userId); err != nil {
+		if token, err := userutil.GenerateJwt(userId, c.ClientIP()); err != nil {
 			api.Fail("system error")
 		} else {
 			api.SuccessWithData("登录成功", gin.H{

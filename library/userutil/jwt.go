@@ -19,7 +19,7 @@ import (
 
 // GenerateJwt
 // @description generate JWT token for user
-func GenerateJwt(userId int) (string, error) {
+func GenerateJwt(userId int, clientIp string) (string, error) {
 	row, err := mysqlutil.D.Prepare("SELECT `id`,`username`,`email`,`lastTime`,`lastIp` FROM `account` WHERE `id` = ?")
 	if err != nil {
 		log.Printf("[ERROR] GenerateToken: %s", err.Error())
@@ -34,6 +34,9 @@ func GenerateJwt(userId int) (string, error) {
 	userLast := UserLastInfo{}
 	_ = res.Scan(&userRedis.UserId, &userRedis.Username, &userRedis.Email, &userLast.LastTime, &userLast.LastIp)
 	_ = setUserBaseInfo(userRedis.UserId, userLast)
+
+	// update last login info
+	_, _ = mysqlutil.D.Exec("UPDATE `account` SET `lastTime` = ?, `lastIp` = ? WHERE `id` = ?", time.Now().Unix(), clientIp, userRedis.UserId)
 
 	headerJson, _ := json.Marshal(JwtHeader{
 		Alg: "HS256",
