@@ -2,6 +2,7 @@ package version_one
 
 import (
 	"github.com/gin-gonic/gin"
+	"net/url"
 	"openid/library/apiutil"
 )
 
@@ -16,5 +17,5 @@ func Login(c *gin.Context) {
 		api.Fail("错误的参数")
 		return
 	}
-	c.Redirect(302, "/v1/"+appid+"?redirect_uri="+redirectUri)
+	c.Redirect(302, "/v1/"+appid+"?redirect_uri="+url.QueryEscape(redirectUri))
 }

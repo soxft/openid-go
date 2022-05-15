@@ -53,7 +53,7 @@ func Info(c *gin.Context) {
 	// delete token
 	_ = helper.DeleteToken(appIdInt, token)
 	api.SuccessWithData("success", gin.H{
-		"openid":   userIds.OpenId,
+		"openId":   userIds.OpenId,
 		"uniqueId": userIds.UniqueId,
 	})
 
