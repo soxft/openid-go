@@ -172,7 +172,10 @@ func AppGetList(c *gin.Context) {
 		return
 	}
 	if appCounts == 0 {
-		api.Fail("没有数据")
+		api.SuccessWithData("success", gin.H{
+			"total": 0,
+			"list":  []gin.H{},
+		})
 		return
 	}
 
