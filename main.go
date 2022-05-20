@@ -10,11 +10,15 @@ import (
 )
 
 func main() {
+	log.SetOutput(os.Stdout)
+
 	// if debug
 	if !config.C.Server.Debug {
 		gin.SetMode(gin.ReleaseMode)
 	}
 
+	// init queue
+	queueutil.Init()
 	// init gin
 	r := gin.New()
 	route.Init(r)
@@ -23,10 +27,4 @@ func main() {
 	if err := r.Run(config.C.Server.Addr); err != nil {
 		log.Panic(err)
 	}
-}
-
-func init() {
-	log.SetOutput(os.Stdout)
-	// 初始化消息队列
-	queueutil.Init()
 }
