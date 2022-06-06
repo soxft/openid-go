@@ -3,6 +3,7 @@ package mq
 import (
 	"encoding/json"
 	"github.com/gomodule/redigo/redis"
+	"log"
 	"sync"
 	"time"
 )
@@ -14,16 +15,16 @@ func New(redis *redis.Pool, maxRetries int) MessageQueue {
 	}
 }
 
-func (q *QueueArgs) Publish(topic string, msg string, delay int) error {
+func (q *QueueArgs) Publish(topic string, msg string, delay int64) error {
 	_redis := q.redis.Get()
 	defer func(_redis redis.Conn) {
 		_ = _redis.Close()
 	}(_redis)
 
 	data := &MsgArgs{
-		Msg:   msg,
-		Delay: delay,
-		Retry: 0,
+		Msg:     msg,
+		DelayAt: delay + time.Now().Unix(),
+		Retry:   0,
 	}
 	if _data, err := json.Marshal(data); err != nil {
 		return err
@@ -52,8 +53,9 @@ func (q *QueueArgs) Subscribe(topic string, processes int, handler func(data str
 					continue
 				}
 
+				var _dataString = _data[1]
 				var _msg MsgArgs
-				if err := json.Unmarshal([]byte(_data[1]), &_msg); err != nil {
+				if err := json.Unmarshal([]byte(_dataString), &_msg); err != nil {
 					continue
 				}
 
@@ -64,6 +66,7 @@ func (q *QueueArgs) Subscribe(topic string, processes int, handler func(data str
 						// retry if error
 						wg.Done()
 						if err := recover(); err != nil {
+							log.Printf("[ERROR] mq handler: %s", err)
 							if _data, err := json.Marshal(_msg); err != nil {
 								return
 							} else {
@@ -77,7 +80,13 @@ func (q *QueueArgs) Subscribe(topic string, processes int, handler func(data str
 							_msg.Retry++
 						}
 					}()
-					time.Sleep(time.Duration(_msg.Delay) * time.Second)
+					// delay 重新放入队列
+					if _msg.DelayAt > time.Now().Unix() {
+						if _, err = _redis.Do("LPUSH", "rmq:"+topic, _dataString); err != nil {
+							log.Printf("[ERROR] mq delay lpush: %s", err)
+						}
+						return
+					}
 					handler(_msg.Msg)
 				}(_msg)
 				// wait for handler

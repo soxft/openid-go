@@ -5,7 +5,7 @@ import (
 )
 
 type MessageQueue interface {
-	Publish(topic string, msg string, delay int) error
+	Publish(topic string, msg string, delay int64) error
 	Subscribe(topic string, processes int, handler func(msg string))
 }
 
@@ -15,7 +15,7 @@ type QueueArgs struct {
 }
 
 type MsgArgs struct {
-	Msg   string `json:"msg"`
-	Retry int    `json:"retry"`
-	Delay int    `json:"delay"`
+	Msg     string `json:"msg"`
+	Retry   int    `json:"retry"`
+	DelayAt int64  `json:"delay_at"`
 }
