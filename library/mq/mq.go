@@ -3,6 +3,7 @@ package mq
 import (
 	"encoding/json"
 	"github.com/gomodule/redigo/redis"
+	"log"
 	"sync"
 	"time"
 )
@@ -53,8 +54,9 @@ func (q *QueueArgs) Subscribe(topic string, processes int, handler func(data str
 					continue
 				}
 
+				var _dataString = _data[1]
 				var _msg MsgArgs
-				if err := json.Unmarshal([]byte(_data[1]), &_msg); err != nil {
+				if err := json.Unmarshal([]byte(_dataString), &_msg); err != nil {
 					continue
 				}
 
@@ -65,6 +67,7 @@ func (q *QueueArgs) Subscribe(topic string, processes int, handler func(data str
 						// retry if error
 						wg.Done()
 						if err := recover(); err != nil {
+							log.Printf("[ERROR] mq handler: %s", err)
 							if _data, err := json.Marshal(_msg); err != nil {
 								return
 							} else {
@@ -80,7 +83,10 @@ func (q *QueueArgs) Subscribe(topic string, processes int, handler func(data str
 					}()
 					// delay 重新放入队列
 					if _msg.DelayAt > time.Now().Unix() {
-						_, _ = _redis.Do("LPUSH", "rmq:"+topic, _data)
+						_, err = _redis.Do("LPUSH", "rmq:"+topic, _dataString)
+						if err != nil {
+							log.Printf("[ERROR] mq delay lpush: %s", err)
+						}
 						return
 					}
 					handler(_msg.Msg)
