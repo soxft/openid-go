@@ -14,16 +14,16 @@ func New(redis *redis.Pool, maxRetries int) MessageQueue {
 	}
 }
 
-func (q *QueueArgs) Publish(topic string, msg string, delay int) error {
+func (q *QueueArgs) Publish(topic string, msg string, delay int64) error {
 	_redis := q.redis.Get()
 	defer func(_redis redis.Conn) {
 		_ = _redis.Close()
 	}(_redis)
 
 	data := &MsgArgs{
-		Msg:   msg,
-		Delay: delay,
-		Retry: 0,
+		Msg:     msg,
+		DelayAt: delay + time.Now().Unix(),
+		Retry:   0,
 	}
 	if _data, err := json.Marshal(data); err != nil {
 		return err
@@ -49,6 +49,7 @@ func (q *QueueArgs) Subscribe(topic string, processes int, handler func(data str
 			for {
 				_data, err := redis.Strings(_redis.Do("BRPOP", "rmq:"+topic, 1))
 				if err != nil || _data == nil {
+					time.Sleep(time.Millisecond * 100)
 					continue
 				}
 
@@ -77,7 +78,11 @@ func (q *QueueArgs) Subscribe(topic string, processes int, handler func(data str
 							_msg.Retry++
 						}
 					}()
-					time.Sleep(time.Duration(_msg.Delay) * time.Second)
+					// delay 重新放入队列
+					if _msg.DelayAt > time.Now().Unix() {
+						_, _ = _redis.Do("LPUSH", "rmq:"+topic, _data)
+						return
+					}
 					handler(_msg.Msg)
 				}(_msg)
 				// wait for handler
