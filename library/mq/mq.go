@@ -50,7 +50,6 @@ func (q *QueueArgs) Subscribe(topic string, processes int, handler func(data str
 			for {
 				_data, err := redis.Strings(_redis.Do("BRPOP", "rmq:"+topic, 1))
 				if err != nil || _data == nil {
-					time.Sleep(time.Millisecond * 100)
 					continue
 				}
 
@@ -83,8 +82,7 @@ func (q *QueueArgs) Subscribe(topic string, processes int, handler func(data str
 					}()
 					// delay 重新放入队列
 					if _msg.DelayAt > time.Now().Unix() {
-						_, err = _redis.Do("LPUSH", "rmq:"+topic, _dataString)
-						if err != nil {
+						if _, err = _redis.Do("LPUSH", "rmq:"+topic, _dataString); err != nil {
 							log.Printf("[ERROR] mq delay lpush: %s", err)
 						}
 						return
