@@ -77,7 +77,7 @@ func generateJti(user UserInfo) (string, error) {
 		log.Printf("[ERROR] getJti: %s", err.Error())
 		return "", err
 	}
-	// 5分钟 登录后自动续期
+	// 默认5分钟 登录后自动续期
 	_, _ = _redis.Do("EXPIRE", _redisKey, 60*5)
 	return _jti, nil
 }
@@ -116,7 +116,7 @@ func CheckJwt(jwt string) (UserInfo, error) {
 		return UserInfo{}, err
 	}
 	// 续期
-	setExpire(":jti:"+payload.Jti, ":user:last:"+strconv.Itoa(userInfo.UserId))
+	go setExpire(":jti:"+payload.Jti, ":user:last:"+strconv.Itoa(userInfo.UserId))
 
 	return userInfo, nil
 }
@@ -209,7 +209,7 @@ func setExpire(redisKey ...string) {
 	_redis := redisutil.R.Get()
 	for _, key := range redisKey {
 		_redisKey := config.RedisPrefix + key
-		_, _ = _redis.Do("EXPIRE", _redisKey, 60*60*24*14)
+		_, _ = _redis.Do("EXPIRE", _redisKey, 60*60*24*64)
 	}
 	_ = _redis.Close()
 }
