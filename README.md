@@ -4,6 +4,6 @@ the source code of https://9420.ltd backend
 
 # copyright
 
-copyright xcsoft all rights reserved
+copyright xcsoft 2022
  
-based on Golang-Gin ...
+mainly based on Golang-Gin ...
