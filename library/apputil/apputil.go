@@ -59,7 +59,7 @@ func CreateApp(userId int, appName string) (bool, error) {
 		return false, errors.New("userId is invalid")
 	}
 	if !CheckName(appName) {
-		return false, errors.New("app name is not valid")
+		return false, errors.New("app name is invalid")
 	}
 	// 判断用户app数量是否超过限制
 	counts, err := GetUserAppCount(userId)
@@ -67,7 +67,7 @@ func CreateApp(userId int, appName string) (bool, error) {
 		return false, err
 	}
 	if counts >= config.C.Developer.AppLimit {
-		return false, errors.New("app count is over limit")
+		return false, errors.New("the number of app exceeds the limit")
 	}
 
 	// 创建app
