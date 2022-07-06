@@ -14,7 +14,7 @@ func Login(c *gin.Context) {
 	appid := c.DefaultQuery("appid", "")
 	redirectUri := c.DefaultQuery("redirect_uri", "")
 	if appid == "" || redirectUri == "" {
-		api.Fail("错误的参数")
+		api.Fail("Invalid params")
 		return
 	}
 	c.Redirect(302, "/v1/"+appid+"?redirect_uri="+url.QueryEscape(redirectUri))

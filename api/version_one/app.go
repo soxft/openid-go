@@ -22,7 +22,7 @@ func AppInfo(c *gin.Context) {
 	// get app info
 	if appInfo, err := apputil.GetAppInfo(appIdInt); err != nil {
 		if err == apputil.ErrAppNotExist {
-			api.Fail("应用不存在")
+			api.Fail("app not exist")
 			return
 		}
 		api.Fail("system error")
