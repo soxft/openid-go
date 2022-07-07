@@ -37,7 +37,7 @@ func CheckGateway(gateway string) bool {
 		return false
 	}
 	// 是否包含特殊字符
-	if strings.ContainsAny(gateway, "~!@#$%^&*()_+=|\\{}[];':\",/<>?") {
+	if strings.ContainsAny(gateway, "~!@#$%^&*()_+=|\\{}[];'\",/<>?") {
 		return false
 	}
 	// 不能 以 . 开头 或 结尾
