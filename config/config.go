@@ -8,6 +8,11 @@ import (
 
 var (
 	C           *Config
+	Server      ServerConfig
+	Redis       RedisConfig
+	Aliyun      AliyunConfig
+	Jwt         JwtConfig
+	Developer   DeveloperConfig
 	RedisPrefix string
 )
 
@@ -16,9 +21,15 @@ func init() {
 	if err != nil {
 		log.Panicf("error when reading yaml: %v", err)
 	}
-	C = new(Config)
+	C = &Config{}
 	if err := yaml.Unmarshal(data, C); err != nil {
 		log.Panicf("error when unmarshal yaml: %v", err)
 	}
-	RedisPrefix = C.Redis.Prefix
+
+	Server = C.ServerConfig
+	Redis = C.RedisConfig
+	Aliyun = C.AliyunConfig
+	Jwt = C.JwtConfig
+	Developer = C.DeveloperConfig
+	RedisPrefix = C.RedisConfig.Prefix
 }
