@@ -1,22 +1,25 @@
 package mysqlutil
 
 import (
-	"database/sql"
-	_ "github.com/go-sql-driver/mysql"
+	"fmt"
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
 	"log"
 	"openid/config"
 	"time"
 )
 
-var D *sql.DB
+var D *gorm.DB
 
 func init() {
 	m := config.Mysql
-	var err error
-	D, err = sql.Open("mysql", m.User+":"+m.Pwd+"@tcp("+m.Addr+")/"+m.Db+"?charset="+m.Charset)
+	dsn := fmt.Sprintf("%s:%s@tcp(%s)/%s?charset=%s", m.User, m.Pwd, m.Addr, m.Db, m.Charset)
+	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
 		log.Fatalf("mysql error: %v", err)
 	}
+
+	D, err := db.DB()
 	D.SetMaxOpenConns(m.MaxOpen)
 	D.SetMaxIdleConns(m.MaxIdle)
 	D.SetConnMaxLifetime(time.Duration(m.MaxLifetime) * time.Second)
