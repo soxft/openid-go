@@ -7,9 +7,9 @@ type Account struct {
 	Salt     string
 	Email    string
 	RegTime  int64
-	RegIp    int64
+	RegIp    string
 	LastTime int64
-	LastIp   int64
+	LastIp   string
 }
 
 type App struct {
@@ -36,4 +36,12 @@ type UniqueId struct {
 	DevUserId uint
 	UniqueId  string
 	CreateAt  int64 `gorm:"autoCreateTime"`
+}
+
+func (UniqueId) TableName() string {
+	return "unique_id"
+}
+
+func (OpenID) TableName() string {
+	return "open_id"
 }
