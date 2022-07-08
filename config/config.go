@@ -10,6 +10,7 @@ var (
 	C           *Config
 	Server      ServerConfig
 	Redis       RedisConfig
+	Mysql       MysqlConfig
 	Aliyun      AliyunConfig
 	Jwt         JwtConfig
 	Developer   DeveloperConfig
@@ -28,6 +29,7 @@ func init() {
 
 	Server = C.ServerConfig
 	Redis = C.RedisConfig
+	Mysql = C.MysqlConfig
 	Aliyun = C.AliyunConfig
 	Jwt = C.JwtConfig
 	Developer = C.DeveloperConfig

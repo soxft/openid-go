@@ -66,7 +66,7 @@ func CreateApp(userId int, appName string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	if counts >= config.C.Developer.AppLimit {
+	if counts >= config.Developer.AppLimit {
 		return false, errors.New("the number of app exceeds the limit")
 	}
 

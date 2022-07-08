@@ -48,7 +48,7 @@ func RegisterCode(c *gin.Context) {
 	_msg, _ := json.Marshal(mailutil.Mail{
 		ToAddress: email,
 		Subject:   verifyCode + " 为您的验证码",
-		Content:   "您正在注册 " + config.C.Server.Title + ". 您的验证码为: " + verifyCode + ", 有效期10分钟.",
+		Content:   "您正在注册 " + config.Server.Title + ". 您的验证码为: " + verifyCode + ", 有效期10分钟.",
 		Typ:       "register",
 	})
 

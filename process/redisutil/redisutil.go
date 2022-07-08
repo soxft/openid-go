@@ -9,14 +9,14 @@ import (
 var R *redis.Pool
 
 func init() {
-	RedisConfig := config.C.Redis
+	r := config.Redis
 	R = &redis.Pool{
-		MaxIdle:   RedisConfig.MaxIdle,
-		MaxActive: RedisConfig.MaxActive,
+		MaxIdle:   r.MaxIdle,
+		MaxActive: r.MaxActive,
 		Dial: func() (redis.Conn, error) {
-			c, err := redis.Dial("tcp", RedisConfig.Addr,
-				redis.DialPassword(RedisConfig.Pwd),
-				redis.DialDatabase(RedisConfig.Db),
+			c, err := redis.Dial("tcp", r.Addr,
+				redis.DialPassword(r.Pwd),
+				redis.DialDatabase(r.Db),
 			)
 			if err != nil {
 				log.Fatalf(err.Error())

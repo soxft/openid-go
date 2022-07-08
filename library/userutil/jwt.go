@@ -50,14 +50,14 @@ func GenerateJwt(userId int, clientIp string) (string, error) {
 	}
 	payloadJson, _ := json.Marshal(JwtPayload{
 		UserId: userId,
-		Iss:    config.C.Server.Title,
+		Iss:    config.Server.Title,
 		Iat:    time.Now().Unix(),
 		Jti:    Jti,
 	})
 
 	header := base64.StdEncoding.EncodeToString(headerJson)
 	payload := base64.StdEncoding.EncodeToString(payloadJson)
-	signature := header + "." + payload + "." + toolutil.Sha256(header+"."+payload, config.C.Jwt.Secret)
+	signature := header + "." + payload + "." + toolutil.Sha256(header+"."+payload, config.Jwt.Secret)
 	return signature, nil
 }
 
@@ -102,7 +102,7 @@ func CheckJwt(jwt string) (UserInfo, error) {
 	}
 	payloadJson, _ := base64.StdEncoding.DecodeString(_jwt[1])
 	signature := _jwt[2]
-	if toolutil.Sha256(_jwt[0]+"."+_jwt[1], config.C.Jwt.Secret) != signature {
+	if toolutil.Sha256(_jwt[0]+"."+_jwt[1], config.Jwt.Secret) != signature {
 		return UserInfo{}, errors.New("jwt signature error")
 	}
 	var payload JwtPayload

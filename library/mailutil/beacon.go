@@ -17,7 +17,7 @@ func CreateBeacon(c *gin.Context, mail string, timeout int) error {
 	}(_redis)
 
 	unique := generateUnique(c)
-	redisPrefix := config.C.Redis.Prefix
+	redisPrefix := config.Redis.Prefix
 
 	ipKey := redisPrefix + ":beacon:ip:" + unique
 	mailKey := redisPrefix + ":beacon:mail:" + toolutil.Md5(mail)
@@ -35,7 +35,7 @@ func CheckBeacon(c *gin.Context, mail string) (bool, error) {
 	}(_redis)
 
 	unique := generateUnique(c)
-	redisPrefix := config.C.Redis.Prefix
+	redisPrefix := config.Redis.Prefix
 
 	ipExists, err := _redis.Do("EXISTS", redisPrefix+":beacon:ip:"+unique)
 	if err != nil {
