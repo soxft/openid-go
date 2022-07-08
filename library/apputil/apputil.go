@@ -8,7 +8,7 @@ import (
 	"math/rand"
 	"openid/config"
 	"openid/library/toolutil"
-	"openid/process/mysqlutil"
+	"openid/process/dbutil"
 	"strconv"
 	"strings"
 	"time"
@@ -76,7 +76,7 @@ func CreateApp(userId int, appName string) (bool, error) {
 		return false, err
 	}
 	appSecret := generateAppSecret()
-	db, err := mysqlutil.D.Prepare("INSERT INTO `app` (`userId`,`appId`,`appName`,`appSecret`,`appGateway`,`time`) VALUES (?, ?, ?, ?, ?, ?)")
+	db, err := dbutil.D.Prepare("INSERT INTO `app` (`userId`,`appId`,`appName`,`appSecret`,`appGateway`,`time`) VALUES (?, ?, ?, ?, ?, ?)")
 	if err != nil {
 		log.Printf("[apputil] create app failed: %s", err.Error())
 		return false, errors.New("server error")
@@ -93,7 +93,7 @@ func CreateApp(userId int, appName string) (bool, error) {
 // 删除用户App
 func DeleteUserApp(appId int) (bool, error) {
 	// 开启 事物
-	db, err := mysqlutil.D.Begin()
+	db, err := dbutil.D.Begin()
 	if err != nil {
 		log.Printf("[ERROR] DeleteUserApp error 1: %s", err)
 		return false, errors.New("DeleteUserApp error")
@@ -120,7 +120,7 @@ func DeleteUserApp(appId int) (bool, error) {
 // @description: 获取用户app列表
 func GetUserAppList(userId, limit, offset int) ([]AppBaseStruct, error) {
 	// 开始获取
-	db, err := mysqlutil.D.Prepare("SELECT `id`,`appId`,`appName`,`time` FROM `app` WHERE `userId` = ? ORDER BY `id` DESC LIMIT ? OFFSET ?")
+	db, err := dbutil.D.Prepare("SELECT `id`,`appId`,`appName`,`time` FROM `app` WHERE `userId` = ? ORDER BY `id` DESC LIMIT ? OFFSET ?")
 	if err != nil {
 		log.Printf("[ERROR] AppGetList error: %s", err)
 		return nil, errors.New("AppGetList error")
@@ -150,7 +150,7 @@ func GetUserAppList(userId, limit, offset int) ([]AppBaseStruct, error) {
 // GetUserAppCount
 // 获取用户的app数量
 func GetUserAppCount(userId int) (int, error) {
-	db, err := mysqlutil.D.Prepare("SELECT COUNT(*) FROM `app` WHERE `userId` = ?")
+	db, err := dbutil.D.Prepare("SELECT COUNT(*) FROM `app` WHERE `userId` = ?")
 	if err != nil {
 		log.Printf("[ERROR] AppGetCount error: %s", err)
 		return 0, errors.New("AppGetCount error")
@@ -166,7 +166,7 @@ func GetUserAppCount(userId int) (int, error) {
 
 func GetAppInfo(appId int) (AppFullInfoStruct, error) {
 	var appInfo AppFullInfoStruct
-	db, err := mysqlutil.D.Prepare("SELECT `id`,`userId`,`appId`,`appName`,`appSecret`,`appGateway`,`time` FROM `app` WHERE `appId` = ?")
+	db, err := dbutil.D.Prepare("SELECT `id`,`userId`,`appId`,`appName`,`appSecret`,`appGateway`,`time` FROM `app` WHERE `appId` = ?")
 	if err != nil {
 		log.Printf("[ERROR] AppGetInfo error: %s", err)
 		return appInfo, errors.New("server error")
@@ -217,7 +217,7 @@ func generateAppId() (string, error) {
 // CheckIfUserApp
 // 判断是否为该用户的app
 func CheckIfUserApp(appId, userId int) (bool, error) {
-	db, err := mysqlutil.D.Prepare("SELECT `userId` FROM `app` WHERE `appId` = ?")
+	db, err := dbutil.D.Prepare("SELECT `userId` FROM `app` WHERE `appId` = ?")
 	if err != nil {
 		log.Printf("[ERROR] CheckIfUserApp error: %s", err)
 		return false, errors.New("CheckIfUserApp error")
@@ -251,7 +251,7 @@ func generateAppSecret() string {
 // CheckAppIdExists
 // @description: check if appid exists
 func checkAppIdExists(appid string) (bool, error) {
-	db, err := mysqlutil.D.Prepare("select `id` from `app` where `appid` = ?")
+	db, err := dbutil.D.Prepare("select `id` from `app` where `appid` = ?")
 	if err != nil {
 		log.Printf("[ERROR] CheckAppIdExists: %s", err.Error())
 		return false, errors.New("system error")

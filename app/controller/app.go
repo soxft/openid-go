@@ -5,7 +5,7 @@ import (
 	"log"
 	"openid/library/apiutil"
 	"openid/library/apputil"
-	"openid/process/mysqlutil"
+	"openid/process/dbutil"
 	"strconv"
 	"strings"
 )
@@ -65,7 +65,7 @@ func AppEdit(c *gin.Context) {
 	}
 
 	// do change
-	db, err := mysqlutil.D.Prepare("UPDATE `app` SET `appName` = ?, `appGateway` = ? WHERE `appId` = ?")
+	db, err := dbutil.D.Prepare("UPDATE `app` SET `appName` = ?, `appGateway` = ? WHERE `appId` = ?")
 	if err != nil {
 		log.Printf("[ERROR] mysqlutil.D.Prepare err: %v", err)
 		api.Fail("system error")

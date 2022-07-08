@@ -1,4 +1,4 @@
-package mysqlutil
+package dbutil
 
 type Account struct {
 	ID       uint

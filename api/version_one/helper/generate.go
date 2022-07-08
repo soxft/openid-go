@@ -6,7 +6,7 @@ import (
 	"github.com/gomodule/redigo/redis"
 	"log"
 	"openid/library/toolutil"
-	"openid/process/mysqlutil"
+	"openid/process/dbutil"
 	"openid/process/redisutil"
 	"strconv"
 	"strings"
@@ -57,7 +57,7 @@ func generateOpenId(appId int, userId int) (string, error) {
 	openId := a + "." + b + "." + c + d
 	openId = strings.ToLower(openId)
 
-	db, _ := mysqlutil.D.Prepare("SELECT `id` FROM `openId` WHERE `openId` = ? ")
+	db, _ := dbutil.D.Prepare("SELECT `id` FROM `openId` WHERE `openId` = ? ")
 	defer func() {
 		_ = db.Close()
 	}()
@@ -66,7 +66,7 @@ func generateOpenId(appId int, userId int) (string, error) {
 	err := db.QueryRow(openId).Scan(&id)
 	if err == sql.ErrNoRows {
 		// 不存在
-		db, _ := mysqlutil.D.Prepare("INSERT INTO `openId` (`userId`,`appId`, `openId`,`time`) VALUES (?, ?, ?, ?)")
+		db, _ := dbutil.D.Prepare("INSERT INTO `openId` (`userId`,`appId`, `openId`,`time`) VALUES (?, ?, ?, ?)")
 		_, err := db.Exec(userId, appId, openId, time.Now().Unix())
 		if err != nil {
 			log.Printf("[ERROR] generateOpenId error: %s", err)
@@ -93,7 +93,7 @@ func generateUniqueId(userId, devUserId int) (string, error) {
 	uniqueId := a + "." + b + "." + c + d
 	uniqueId = strings.ToLower(uniqueId)
 
-	db, _ := mysqlutil.D.Prepare("SELECT `id` FROM `uniqueId` WHERE `uniqueId` = ? ")
+	db, _ := dbutil.D.Prepare("SELECT `id` FROM `uniqueId` WHERE `uniqueId` = ? ")
 	defer func() {
 		_ = db.Close()
 	}()
@@ -102,7 +102,7 @@ func generateUniqueId(userId, devUserId int) (string, error) {
 	err := db.QueryRow(uniqueId).Scan(&id)
 	if err == sql.ErrNoRows {
 		// 不存在
-		db, _ := mysqlutil.D.Prepare("INSERT INTO `uniqueId` (`userId`, `DevUserId`, `uniqueId`,`time`) VALUES (?, ?, ?, ?)")
+		db, _ := dbutil.D.Prepare("INSERT INTO `uniqueId` (`userId`, `DevUserId`, `uniqueId`,`time`) VALUES (?, ?, ?, ?)")
 		_, err := db.Exec(userId, devUserId, uniqueId, time.Now().Unix())
 		if err != nil {
 			log.Printf("[ERROR] generateUniqueId error: %s", err)

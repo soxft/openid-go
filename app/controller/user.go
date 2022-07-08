@@ -9,7 +9,7 @@ import (
 	"openid/library/mailutil"
 	"openid/library/toolutil"
 	"openid/library/userutil"
-	"openid/process/mysqlutil"
+	"openid/process/dbutil"
 	"openid/process/queueutil"
 	"time"
 )
@@ -72,7 +72,7 @@ func UserPasswordUpdate(c *gin.Context) {
 	// change password
 	salt := userutil.GenerateSalt()
 	passwordDb := toolutil.Sha1(newPassword + salt)
-	if res, err := mysqlutil.D.Exec("UPDATE `account` SET `password` = ?, `salt` = ? WHERE `id` = ?", passwordDb, salt, userId); err != nil {
+	if res, err := dbutil.D.Exec("UPDATE `account` SET `password` = ?, `salt` = ? WHERE `id` = ?", passwordDb, salt, userId); err != nil {
 		log.Printf("[ERROR] UserPasswordUpdate %v", err)
 		api.Fail("system error")
 		return
@@ -169,7 +169,7 @@ func UserEmailUpdate(c *gin.Context) {
 	}
 
 	// update email
-	if res, err := mysqlutil.D.Exec("UPDATE `account` SET `email` = ? WHERE `id` = ?", newEmail, c.GetInt("userId")); err != nil {
+	if res, err := dbutil.D.Exec("UPDATE `account` SET `email` = ? WHERE `id` = ?", newEmail, c.GetInt("userId")); err != nil {
 		log.Printf("[ERROR] UserEmailUpdate %v", err)
 		api.Fail("system error")
 		return

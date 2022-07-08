@@ -9,7 +9,7 @@ import (
 	"openid/library/mailutil"
 	"openid/library/toolutil"
 	"openid/library/userutil"
-	"openid/process/mysqlutil"
+	"openid/process/dbutil"
 	"openid/process/queueutil"
 	"time"
 )
@@ -91,7 +91,7 @@ func ForgetPasswordUpdate(c *gin.Context) {
 	// update password
 	salt := userutil.GenerateSalt()
 	passwordDb := toolutil.Sha1(newPassword + salt)
-	if res, err := mysqlutil.D.Exec("UPDATE `account` SET `password` = ?, `salt` = ? WHERE `email` = ?", passwordDb, salt, email); err != nil {
+	if res, err := dbutil.D.Exec("UPDATE `account` SET `password` = ?, `salt` = ? WHERE `email` = ?", passwordDb, salt, email); err != nil {
 		log.Printf("[ERROR] UserPasswordUpdate %v", err)
 		api.Fail("system error")
 		return
@@ -103,7 +103,7 @@ func ForgetPasswordUpdate(c *gin.Context) {
 
 	// get UserName
 	var username string
-	if err := mysqlutil.D.QueryRow("SELECT `username` FROM `account` WHERE `email` = ?", email).Scan(&username); err != nil {
+	if err := dbutil.D.QueryRow("SELECT `username` FROM `account` WHERE `email` = ?", email).Scan(&username); err != nil {
 		log.Printf("[ERROR] UserPasswordUpdate %v", err)
 		api.Fail("system error")
 		return

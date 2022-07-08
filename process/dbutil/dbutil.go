@@ -1,4 +1,4 @@
-package mysqlutil
+package dbutil
 
 import (
 	"fmt"

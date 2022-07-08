@@ -10,7 +10,7 @@ import (
 	"openid/library/mailutil"
 	"openid/library/toolutil"
 	"openid/library/userutil"
-	"openid/process/mysqlutil"
+	"openid/process/dbutil"
 	"openid/process/queueutil"
 	"time"
 )
@@ -118,7 +118,7 @@ func RegisterSubmit(c *gin.Context) {
 	pwd := toolutil.Sha1(password + salt)
 
 	// insert
-	_db, err := mysqlutil.D.Prepare("INSERT INTO `account` (`username`,`password`,`salt`,`email`,`regTime`,`regIp`,`lastTime`,`lastIp`) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")
+	_db, err := dbutil.D.Prepare("INSERT INTO `account` (`username`,`password`,`salt`,`email`,`regTime`,`regIp`,`lastTime`,`lastIp`) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")
 	if err != nil {
 		log.Printf("[ERROR] RegisterSubmit %s", err.Error())
 		api.Fail("register failed")

@@ -8,7 +8,7 @@ import (
 	"openid/config"
 	"openid/library/apputil"
 	"openid/library/toolutil"
-	"openid/process/mysqlutil"
+	"openid/process/dbutil"
 	"openid/process/redisutil"
 	"strconv"
 )
@@ -71,7 +71,7 @@ func DeleteToken(appId int, token string) error {
 // GetUserOpenId
 // 获取 用户openID
 func getUserOpenId(appId int, userId int) (string, error) {
-	db, err := mysqlutil.D.Prepare("SELECT `openId` FROM `openId` WHERE `userId` = ? AND `appId` = ?")
+	db, err := dbutil.D.Prepare("SELECT `openId` FROM `openId` WHERE `userId` = ? AND `appId` = ?")
 	defer func() {
 		_ = db.Close()
 	}()
@@ -94,7 +94,7 @@ func getUserOpenId(appId int, userId int) (string, error) {
 // getUserUniqueId
 // 获取用户UniqueId
 func getUserUniqueId(userId, DevUserId int) (string, error) {
-	db, err := mysqlutil.D.Prepare("SELECT `uniqueId` FROM `uniqueId` WHERE `userId` = ? AND `devUserId` = ?")
+	db, err := dbutil.D.Prepare("SELECT `uniqueId` FROM `uniqueId` WHERE `userId` = ? AND `devUserId` = ?")
 	defer func() {
 		_ = db.Close()
 	}()

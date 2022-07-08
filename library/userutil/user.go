@@ -9,7 +9,7 @@ import (
 	"openid/config"
 	"openid/library/mailutil"
 	"openid/library/toolutil"
-	"openid/process/mysqlutil"
+	"openid/process/dbutil"
 	"openid/process/queueutil"
 	"openid/process/redisutil"
 	"strconv"
@@ -45,7 +45,7 @@ func RegisterCheck(username, email string) error {
 // CheckUserNameExists
 // @description Check username if exists in database
 func CheckUserNameExists(username string) (bool, error) {
-	row, err := mysqlutil.D.Prepare("SELECT `id` FROM `account` WHERE `username` = ?")
+	row, err := dbutil.D.Prepare("SELECT `id` FROM `account` WHERE `username` = ?")
 	if err != nil {
 		log.Printf("CheckUserNameExists: %s", err.Error())
 		return false, errors.New("server error")
@@ -66,7 +66,7 @@ func CheckUserNameExists(username string) (bool, error) {
 // CheckEmailExists
 // @description Check email if exists in database
 func CheckEmailExists(email string) (bool, error) {
-	row, err := mysqlutil.D.Prepare("SELECT `id` FROM `account` WHERE `email` = ?")
+	row, err := dbutil.D.Prepare("SELECT `id` FROM `account` WHERE `email` = ?")
 	if err != nil {
 		log.Printf("[ERROR] CheckEmailExists err: %v", err)
 		return false, errors.New("server error")
@@ -91,9 +91,9 @@ func CheckPassword(username, password string) (int, error) {
 	var err error
 
 	if toolutil.IsEmail(username) {
-		row, err = mysqlutil.D.Prepare("SELECT `id`,`salt`,`password` FROM `account` WHERE `email` = ? ")
+		row, err = dbutil.D.Prepare("SELECT `id`,`salt`,`password` FROM `account` WHERE `email` = ? ")
 	} else {
-		row, err = mysqlutil.D.Prepare("SELECT `id`,`salt`,`password` FROM `account` WHERE `username` = ? ")
+		row, err = dbutil.D.Prepare("SELECT `id`,`salt`,`password` FROM `account` WHERE `username` = ? ")
 	}
 	if err != nil {
 		return 0, errors.New("system error")
@@ -136,7 +136,7 @@ func GetUserLast(userId int) UserLastInfo {
 func CheckPasswordByUserId(userId int, password string) (bool, error) {
 	var row *sql.Stmt
 	var err error
-	row, err = mysqlutil.D.Prepare("SELECT `salt`,`password` FROM `account` WHERE `id` = ? ")
+	row, err = dbutil.D.Prepare("SELECT `salt`,`password` FROM `account` WHERE `id` = ? ")
 	if err != nil {
 		log.Printf("[ERROR] CheckPasswordByUserId: %s", err.Error())
 		return false, errors.New("system error")

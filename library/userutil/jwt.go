@@ -9,7 +9,7 @@ import (
 	"log"
 	"openid/config"
 	"openid/library/toolutil"
-	"openid/process/mysqlutil"
+	"openid/process/dbutil"
 	"openid/process/redisutil"
 	"regexp"
 	"strconv"
@@ -20,7 +20,7 @@ import (
 // GenerateJwt
 // @description generate JWT token for user
 func GenerateJwt(userId int, clientIp string) (string, error) {
-	row, err := mysqlutil.D.Prepare("SELECT `id`,`username`,`email`,`lastTime`,`lastIp` FROM `account` WHERE `id` = ?")
+	row, err := dbutil.D.Prepare("SELECT `id`,`username`,`email`,`lastTime`,`lastIp` FROM `account` WHERE `id` = ?")
 	if err != nil {
 		log.Printf("[ERROR] GenerateToken: %s", err.Error())
 		return "", err
@@ -36,7 +36,7 @@ func GenerateJwt(userId int, clientIp string) (string, error) {
 	_ = setUserBaseInfo(userRedis.UserId, userLast)
 
 	// update last login info
-	_, _ = mysqlutil.D.Exec("UPDATE `account` SET `lastTime` = ?, `lastIp` = ? WHERE `id` = ?", time.Now().Unix(), clientIp, userRedis.UserId)
+	_, _ = dbutil.D.Exec("UPDATE `account` SET `lastTime` = ?, `lastIp` = ? WHERE `id` = ?", time.Now().Unix(), clientIp, userRedis.UserId)
 
 	headerJson, _ := json.Marshal(JwtHeader{
 		Alg: "HS256",
