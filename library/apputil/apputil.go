@@ -170,6 +170,15 @@ func GetAppInfo(appId string) (AppFullInfoStruct, error) {
 		log.Printf("[ERROR] GetAppInfo error: %s", err)
 		return appInfo, errors.New("server error")
 	}
+	appInfo = AppFullInfoStruct{
+		Id:         appInfoRaw.ID,
+		AppUserId:  appInfoRaw.UserId,
+		AppId:      appInfoRaw.AppId,
+		AppName:    appInfoRaw.AppName,
+		AppSecret:  appInfoRaw.AppSecret,
+		AppGateway: appInfoRaw.AppGateway,
+		CreateAt:   appInfoRaw.CreateAt,
+	}
 	return appInfo, nil
 }
 
@@ -232,7 +241,7 @@ func generateAppSecret() string {
 // @description: check if appid exists
 func checkAppIdExists(appid string) (bool, error) {
 	var appId dbutil.App
-	err := dbutil.D.Model(&dbutil.App{}).Where("appid = ?", appid).Take(&appId).Error
+	err := dbutil.D.Where(dbutil.App{AppId: appid}).Take(&appId).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return false, nil
 	} else if err != nil {

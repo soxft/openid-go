@@ -28,4 +28,9 @@ func init() {
 	if err := sqlDb.Ping(); err != nil {
 		log.Fatalf("mysql connect error: %v", err)
 	}
+
+	// 屏蔽 record not found 错误
+	_ = D.Callback().Query().Before("gorm:query").Register("disable_raise_record_not_found", func(d *gorm.DB) {
+		d.Statement.RaiseErrorOnNotFound = false
+	})
 }

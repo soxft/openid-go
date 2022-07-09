@@ -23,8 +23,9 @@ func Code(c *gin.Context) {
 	}
 
 	// 检测 redirect_uri 是否为app所对应的
+	var err error
 	var redirectUriDomain *url.URL
-	if redirectUriDomain, err := url.Parse(redirectUri); err != nil {
+	if redirectUriDomain, err = url.Parse(redirectUri); err != nil {
 		api.Fail("Invalid redirect_uri")
 		return
 	} else if redirectUriDomain.Host == "" {
@@ -34,7 +35,6 @@ func Code(c *gin.Context) {
 
 	// get app Info
 	var appInfo apputil.AppFullInfoStruct
-	var err error
 	if appInfo, err = apputil.GetAppInfo(appId); err != nil {
 		if err == apputil.ErrAppNotExist {
 			api.Fail("app not exist")
