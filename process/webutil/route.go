@@ -1,4 +1,4 @@
-package route
+package webutil
 
 import (
 	"github.com/gin-gonic/gin"
@@ -8,9 +8,9 @@ import (
 	"openid/config"
 )
 
-func Init(r *gin.Engine) {
+func initRoute(r *gin.Engine) {
 	r.Use(gin.Recovery())
-	if config.C.Server.Log {
+	if config.Server.Log {
 		r.Use(gin.Logger())
 	}
 	r.Use(middleware.Cors())

@@ -1,0 +1,36 @@
+package dbutil
+
+import (
+	"fmt"
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
+	"log"
+	"openid/config"
+	"time"
+)
+
+var D *gorm.DB
+
+func init() {
+	m := config.Mysql
+	dsn := fmt.Sprintf("%s:%s@tcp(%s)/%s?charset=%s", m.User, m.Pwd, m.Addr, m.Db, m.Charset)
+
+	var err error
+	D, err = gorm.Open(mysql.Open(dsn), &gorm.Config{})
+	if err != nil {
+		log.Fatalf("mysql error: %v", err)
+	}
+
+	sqlDb, err := D.DB()
+	sqlDb.SetMaxOpenConns(m.MaxOpen)
+	sqlDb.SetMaxIdleConns(m.MaxIdle)
+	sqlDb.SetConnMaxLifetime(time.Duration(m.MaxLifetime) * time.Second)
+	if err := sqlDb.Ping(); err != nil {
+		log.Fatalf("mysql connect error: %v", err)
+	}
+
+	// 屏蔽 record not found 错误
+	_ = D.Callback().Query().Before("gorm:query").Register("disable_raise_record_not_found", func(d *gorm.DB) {
+		d.Statement.RaiseErrorOnNotFound = false
+	})
+}

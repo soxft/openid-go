@@ -10,7 +10,7 @@ import (
 	"openid/library/mailutil"
 	"openid/library/toolutil"
 	"openid/library/userutil"
-	"openid/process/mysqlutil"
+	"openid/process/dbutil"
 	"openid/process/queueutil"
 	"time"
 )
@@ -48,7 +48,7 @@ func RegisterCode(c *gin.Context) {
 	_msg, _ := json.Marshal(mailutil.Mail{
 		ToAddress: email,
 		Subject:   verifyCode + " 为您的验证码",
-		Content:   "您正在注册 " + config.C.Server.Title + ". 您的验证码为: " + verifyCode + ", 有效期10分钟.",
+		Content:   "您正在注册 " + config.Server.Title + ". 您的验证码为: " + verifyCode + ", 有效期10分钟.",
 		Typ:       "register",
 	})
 
@@ -117,19 +117,25 @@ func RegisterSubmit(c *gin.Context) {
 	salt := userutil.GenerateSalt()
 	pwd := toolutil.Sha1(password + salt)
 
-	// insert
-	_db, err := mysqlutil.D.Prepare("INSERT INTO `account` (`username`,`password`,`salt`,`email`,`regTime`,`regIp`,`lastTime`,`lastIp`) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")
-	if err != nil {
-		log.Printf("[ERROR] RegisterSubmit %s", err.Error())
+	// insert to Database
+	newUser := dbutil.Account{
+		Username: username,
+		Password: pwd,
+		Salt:     salt,
+		Email:    email,
+		RegTime:  timestamp,
+		RegIp:    userIp,
+		LastTime: timestamp,
+		LastIp:   userIp,
+	}
+	result := dbutil.D.Create(&newUser)
+	if result.Error != nil || result.RowsAffected == 0 {
+		log.Printf("[ERROR] RegisterSubmit %s", result.Error.Error())
 		api.Fail("register failed")
 		return
 	}
-	_, err = _db.Query(username, pwd, salt, email, timestamp, userIp, timestamp, userIp)
-	if err != nil {
-		log.Printf("[ERROR] RegisterSubmit %s", err.Error())
-		api.Fail("register failed")
-		return
-	}
+
+	// 消费验证码
 	coder.Consume("register", email)
 	api.Success("success")
 }

@@ -4,7 +4,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"openid/library/apiutil"
 	"openid/library/apputil"
-	"strconv"
 )
 
 // AppInfo
@@ -14,13 +13,8 @@ func AppInfo(c *gin.Context) {
 	appId := c.Param("appid")
 	api := apiutil.New(c)
 
-	appIdInt, err := strconv.Atoi(appId)
-	if err != nil {
-		api.Fail("appId is not a valid number")
-		return
-	}
 	// get app info
-	if appInfo, err := apputil.GetAppInfo(appIdInt); err != nil {
+	if appInfo, err := apputil.GetAppInfo(appId); err != nil {
 		if err == apputil.ErrAppNotExist {
 			api.Fail("app not exist")
 			return

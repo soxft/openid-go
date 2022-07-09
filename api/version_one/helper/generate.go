@@ -1,12 +1,12 @@
 package helper
 
 import (
-	"database/sql"
 	"errors"
 	"github.com/gomodule/redigo/redis"
+	"gorm.io/gorm"
 	"log"
 	"openid/library/toolutil"
-	"openid/process/mysqlutil"
+	"openid/process/dbutil"
 	"openid/process/redisutil"
 	"strconv"
 	"strings"
@@ -15,7 +15,7 @@ import (
 
 // GenerateToken
 // @description: v1 获取token (用于跳转redirect_uri携带)
-func GenerateToken(appId, userId int) (string, error) {
+func GenerateToken(appId string, userId int) (string, error) {
 	// check if exists in redis
 	_redis := redisutil.R.Get()
 	defer func() {
@@ -48,26 +48,23 @@ func GenerateToken(appId, userId int) (string, error) {
 
 // generateOpenId
 // 创建一个唯一的openId
-func generateOpenId(appId int, userId int) (string, error) {
-	a := toolutil.Md5(strconv.Itoa(appId))[:10]
+func generateOpenId(appId string, userId int) (string, error) {
+	a := toolutil.Md5(appId)[:10]
 	b := toolutil.Md5(strconv.Itoa(userId))[:10]
 	d := toolutil.Md5(strconv.FormatInt(time.Now().UnixNano(), 10))
 	c := toolutil.Md5(toolutil.RandStr(16))
 
 	openId := a + "." + b + "." + c + d
 	openId = strings.ToLower(openId)
+	err := dbutil.D.Model(&dbutil.OpenId{}).Where("open_id = ?", openId).First(&dbutil.OpenId{}).Error
 
-	db, _ := mysqlutil.D.Prepare("SELECT `id` FROM `openId` WHERE `openId` = ? ")
-	defer func() {
-		_ = db.Close()
-	}()
-
-	var id int
-	err := db.QueryRow(openId).Scan(&id)
-	if err == sql.ErrNoRows {
+	if errors.Is(err, gorm.ErrRecordNotFound) {
 		// 不存在
-		db, _ := mysqlutil.D.Prepare("INSERT INTO `openId` (`userId`,`appId`, `openId`,`time`) VALUES (?, ?, ?, ?)")
-		_, err := db.Exec(userId, appId, openId, time.Now().Unix())
+		err := dbutil.D.Create(&dbutil.OpenId{
+			UserId: userId,
+			AppId:  appId,
+			OpenId: openId,
+		}).Error
 		if err != nil {
 			log.Printf("[ERROR] generateOpenId error: %s", err)
 			return "", errors.New("server error")
@@ -93,17 +90,15 @@ func generateUniqueId(userId, devUserId int) (string, error) {
 	uniqueId := a + "." + b + "." + c + d
 	uniqueId = strings.ToLower(uniqueId)
 
-	db, _ := mysqlutil.D.Prepare("SELECT `id` FROM `uniqueId` WHERE `uniqueId` = ? ")
-	defer func() {
-		_ = db.Close()
-	}()
-
-	var id int
-	err := db.QueryRow(uniqueId).Scan(&id)
-	if err == sql.ErrNoRows {
+	err := dbutil.D.Model(&dbutil.UniqueId{}).Where("unique_id = ?", uniqueId).First(&dbutil.UniqueId{}).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
 		// 不存在
-		db, _ := mysqlutil.D.Prepare("INSERT INTO `uniqueId` (`userId`, `DevUserId`, `uniqueId`,`time`) VALUES (?, ?, ?, ?)")
-		_, err := db.Exec(userId, devUserId, uniqueId, time.Now().Unix())
+		err := dbutil.D.Create(&dbutil.UniqueId{
+			UserId:    userId,
+			DevUserId: devUserId,
+			UniqueId:  uniqueId,
+		}).Error
+
 		if err != nil {
 			log.Printf("[ERROR] generateUniqueId error: %s", err)
 			return "", errors.New("server error")

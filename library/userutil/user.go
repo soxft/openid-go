@@ -1,15 +1,15 @@
 package userutil
 
 import (
-	"database/sql"
 	"encoding/json"
 	"errors"
 	"github.com/gomodule/redigo/redis"
+	"gorm.io/gorm"
 	"log"
 	"openid/config"
 	"openid/library/mailutil"
 	"openid/library/toolutil"
-	"openid/process/mysqlutil"
+	"openid/process/dbutil"
 	"openid/process/queueutil"
 	"openid/process/redisutil"
 	"strconv"
@@ -45,20 +45,13 @@ func RegisterCheck(username, email string) error {
 // CheckUserNameExists
 // @description Check username if exists in database
 func CheckUserNameExists(username string) (bool, error) {
-	row, err := mysqlutil.D.Prepare("SELECT `id` FROM `account` WHERE `username` = ?")
-	if err != nil {
-		log.Printf("CheckUserNameExists: %s", err.Error())
-		return false, errors.New("server error")
-	}
-	res := row.QueryRow(username)
-	var id int
-	err = res.Scan(&id)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return false, nil
-		}
-		log.Printf("[ERROR] CheckEmailExists err: %v", err)
-		return false, errors.New("server error")
+	var ID int64
+	err := dbutil.D.Model(&dbutil.Account{}).Select("id").Where("username = ?", username).First(&ID).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return false, nil
+	} else if err != nil {
+		log.Printf("[ERROR] CheckUserNameExists: %s", err.Error())
+		return false, errors.New("system error")
 	}
 	return true, nil
 }
@@ -66,20 +59,13 @@ func CheckUserNameExists(username string) (bool, error) {
 // CheckEmailExists
 // @description Check email if exists in database
 func CheckEmailExists(email string) (bool, error) {
-	row, err := mysqlutil.D.Prepare("SELECT `id` FROM `account` WHERE `email` = ?")
-	if err != nil {
-		log.Printf("[ERROR] CheckEmailExists err: %v", err)
-		return false, errors.New("server error")
-	}
-	res := row.QueryRow(email)
-	var id int
-	err = res.Scan(&id)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return false, nil
-		}
-		log.Printf("[ERROR] CheckEmailExists err: %v", err)
-		return false, errors.New("server error")
+	var ID string
+	err := dbutil.D.Model(&dbutil.Account{}).Select("id").Where(&dbutil.Account{Email: email}).Take(&ID).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return false, nil
+	} else if err != nil {
+		log.Printf("[ERROR] CheckUserNameExists: %s", err.Error())
+		return false, errors.New("system error")
 	}
 	return true, nil
 }
@@ -87,31 +73,24 @@ func CheckEmailExists(email string) (bool, error) {
 // CheckPassword
 // @description 验证用户登录
 func CheckPassword(username, password string) (int, error) {
-	var row *sql.Stmt
-	var err error
 
+	var err error
+	var account dbutil.Account
 	if toolutil.IsEmail(username) {
-		row, err = mysqlutil.D.Prepare("SELECT `id`,`salt`,`password` FROM `account` WHERE `email` = ? ")
+		err = dbutil.D.Select("id, salt, password").Where(dbutil.Account{Email: username}).Take(&account).Error
 	} else {
-		row, err = mysqlutil.D.Prepare("SELECT `id`,`salt`,`password` FROM `account` WHERE `username` = ? ")
+		err = dbutil.D.Select("id, salt, password").Where(dbutil.Account{Username: username}).Take(&account).Error
 	}
-	if err != nil {
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return 0, errors.New("用户名或密码错误")
+	} else if err != nil {
 		return 0, errors.New("system error")
 	}
-	res := row.QueryRow(username)
-	if res.Err() == sql.ErrNoRows {
-		return 0, errors.New("用户名或密码错误")
-	} else if res.Err() != nil {
-		return 0, errors.New("system error")
-	}
-	var id int
-	var salt string
-	var passwordDb string
-	_ = res.Scan(&id, &salt, &passwordDb)
-	if toolutil.Sha1(password+salt) != passwordDb {
+	if toolutil.Sha1(password+account.Salt) != account.Password {
 		return 0, errors.New("用户名或密码错误")
 	}
-	return id, nil
+	return account.ID, nil
 }
 
 // GetUserLast
@@ -134,24 +113,15 @@ func GetUserLast(userId int) UserLastInfo {
 // CheckPasswordByUserId
 // @description 通过userid验证用户password
 func CheckPasswordByUserId(userId int, password string) (bool, error) {
-	var row *sql.Stmt
-	var err error
-	row, err = mysqlutil.D.Prepare("SELECT `salt`,`password` FROM `account` WHERE `id` = ? ")
-	if err != nil {
-		log.Printf("[ERROR] CheckPasswordByUserId: %s", err.Error())
-		return false, errors.New("system error")
-	}
-	res := row.QueryRow(userId)
-	if res.Err() == sql.ErrNoRows {
+	// rewrite by gorm
+	var account dbutil.Account
+	err := dbutil.D.Model(&dbutil.Account{}).Select("id, salt, password").Where("id = ?", userId).Take(&account).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return false, nil
-	} else if res.Err() != nil {
-		log.Printf("[ERROR] CheckPasswordByUserId: %s", res.Err())
+	} else if err != nil {
 		return false, errors.New("system error")
 	}
-	var salt string
-	var passwordDb string
-	_ = res.Scan(&salt, &passwordDb)
-	if toolutil.Sha1(password+salt) != passwordDb {
+	if toolutil.Sha1(password+account.Salt) != account.Password {
 		return false, nil
 	}
 	return true, nil

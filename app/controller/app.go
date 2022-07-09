@@ -5,7 +5,7 @@ import (
 	"log"
 	"openid/library/apiutil"
 	"openid/library/apputil"
-	"openid/process/mysqlutil"
+	"openid/process/dbutil"
 	"strconv"
 	"strings"
 )
@@ -49,14 +49,9 @@ func AppEdit(c *gin.Context) {
 		api.Fail("应用网关不合法")
 		return
 	}
-	appIdInt, err := strconv.Atoi(appId)
-	if err != nil {
-		api.Fail("非法访问")
-		return
-	}
 
 	// 判断是否为 该用户的app
-	if i, err := apputil.CheckIfUserApp(appIdInt, c.GetInt("userId")); err != nil {
+	if i, err := apputil.CheckIfUserApp(appId, c.GetInt("userId")); err != nil {
 		api.Fail("system error")
 		return
 	} else if !i {
@@ -65,13 +60,10 @@ func AppEdit(c *gin.Context) {
 	}
 
 	// do change
-	db, err := mysqlutil.D.Prepare("UPDATE `app` SET `appName` = ?, `appGateway` = ? WHERE `appId` = ?")
-	if err != nil {
-		log.Printf("[ERROR] mysqlutil.D.Prepare err: %v", err)
-		api.Fail("system error")
-		return
-	}
-	_, err = db.Exec(appName, appGateway, appIdInt)
+	err := dbutil.D.Model(&dbutil.App{}).Where("app_id = ?", appId).Updates(&dbutil.App{
+		AppName:    appName,
+		AppGateway: appGateway,
+	}).Error
 	if err != nil {
 		log.Printf("[ERROR] db.Exec err: %v", err)
 		api.Fail("system error")
@@ -86,13 +78,9 @@ func AppEdit(c *gin.Context) {
 func AppDel(c *gin.Context) {
 	appId := c.Param("appid")
 	api := apiutil.New(c)
-	appIdInt, err := strconv.Atoi(appId)
-	if err != nil {
-		api.Fail("非法访问 ")
-	}
 
 	// 判断是否为 该用户的app
-	if i, err := apputil.CheckIfUserApp(appIdInt, c.GetInt("userId")); err != nil {
+	if i, err := apputil.CheckIfUserApp(appId, c.GetInt("userId")); err != nil {
 		api.Fail("system error")
 		return
 	} else if !i {
@@ -101,7 +89,7 @@ func AppDel(c *gin.Context) {
 	}
 
 	// delete
-	if success, err := apputil.DeleteUserApp(appIdInt); !success {
+	if success, err := apputil.DeleteUserApp(appId); !success {
 		api.Fail(err.Error())
 	} else if err != nil {
 		api.Fail("system error")
@@ -116,13 +104,9 @@ func AppDel(c *gin.Context) {
 func AppInfo(c *gin.Context) {
 	appId := c.Param("appid")
 	api := apiutil.New(c)
-	appIdInt, err := strconv.Atoi(appId)
-	if err != nil {
-		api.Fail("非法访问")
-		return
-	}
+
 	// 判断是否为 该用户的app
-	if i, err := apputil.CheckIfUserApp(appIdInt, c.GetInt("userId")); err != nil {
+	if i, err := apputil.CheckIfUserApp(appId, c.GetInt("userId")); err != nil {
 		api.Fail("system error")
 		return
 	} else if !i {
@@ -131,7 +115,7 @@ func AppInfo(c *gin.Context) {
 	}
 
 	// get app info
-	if appInfo, err := apputil.GetAppInfo(appIdInt); err != nil {
+	if appInfo, err := apputil.GetAppInfo(appId); err != nil {
 		if err == apputil.ErrAppNotExist {
 			api.Fail("应用不存在")
 			return

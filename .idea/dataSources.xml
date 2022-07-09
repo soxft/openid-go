@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="DataSourceManagerImpl" format="xml" multifile-model="true">
-    <data-source source="LOCAL" name="openid@10.1.1.10" uuid="4b33a4c0-48e7-4734-b2fb-7c458c680542">
+    <data-source source="LOCAL" name="openid@10.11.1.10" uuid="4b33a4c0-48e7-4734-b2fb-7c458c680542">
       <driver-ref>mysql.8</driver-ref>
       <synchronize>true</synchronize>
       <jdbc-driver>com.mysql.cj.jdbc.Driver</jdbc-driver>
-      <jdbc-url>jdbc:mysql://10.1.1.10:3306/openid</jdbc-url>
+      <jdbc-url>jdbc:mysql://10.11.1.10:3306/openid</jdbc-url>
       <working-dir>$ProjectFileDir$</working-dir>
     </data-source>
   </component>

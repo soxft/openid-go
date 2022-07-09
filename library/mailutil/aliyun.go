@@ -7,9 +7,7 @@ import (
 )
 
 func SendByAliyun(mail Mail) error {
-	AliyunConfig := config.C.Aliyun
-
-	client, err := sdk.NewClientWithAccessKey("cn-hangzhou", AliyunConfig.AccessKey, AliyunConfig.AccessSecret)
+	client, err := sdk.NewClientWithAccessKey("cn-hangzhou", config.Aliyun.AccessKey, config.Aliyun.AccessSecret)
 	if err != nil {
 		return err
 	}
@@ -20,10 +18,10 @@ func SendByAliyun(mail Mail) error {
 	request.Version = "2015-11-23"
 	request.ApiName = "SingleSendMail"
 	request.QueryParams["ToAddress"] = mail.ToAddress
-	request.QueryParams["Subject"] = mail.Subject + " - " + config.C.Server.Title
+	request.QueryParams["Subject"] = mail.Subject + " - " + config.Server.Title
 	request.QueryParams["HtmlBody"] = mail.Content
-	request.QueryParams["FromAlias"] = config.C.Server.Title
-	request.QueryParams["AccountName"] = AliyunConfig.Email
+	request.QueryParams["FromAlias"] = config.Server.Title
+	request.QueryParams["AccountName"] = config.Aliyun.Email
 	request.QueryParams["AddressType"] = "1"
 	request.QueryParams["ReplyToAddress"] = "true"
 

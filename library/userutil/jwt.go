@@ -1,15 +1,15 @@
 package userutil
 
 import (
-	"database/sql"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"github.com/gomodule/redigo/redis"
+	"gorm.io/gorm"
 	"log"
 	"openid/config"
 	"openid/library/toolutil"
-	"openid/process/mysqlutil"
+	"openid/process/dbutil"
 	"openid/process/redisutil"
 	"regexp"
 	"strconv"
@@ -20,23 +20,26 @@ import (
 // GenerateJwt
 // @description generate JWT token for user
 func GenerateJwt(userId int, clientIp string) (string, error) {
-	row, err := mysqlutil.D.Prepare("SELECT `id`,`username`,`email`,`lastTime`,`lastIp` FROM `account` WHERE `id` = ?")
-	if err != nil {
-		log.Printf("[ERROR] GenerateToken: %s", err.Error())
+	var userInfo dbutil.Account
+	err := dbutil.D.Model(&dbutil.Account{}).Select("id, username, email, last_time, last_ip").Where("id = ?", userId).Take(&userInfo).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return "", nil
+	} else if err != nil {
 		return "", err
 	}
-	res := row.QueryRow(userId)
-	if res.Err() == sql.ErrNoRows {
-		return "", nil
+	userRedis := UserInfo{
+		UserId:   userInfo.ID,
+		Username: userInfo.Username,
+		Email:    userInfo.Email,
 	}
-
-	userRedis := UserInfo{}
-	userLast := UserLastInfo{}
-	_ = res.Scan(&userRedis.UserId, &userRedis.Username, &userRedis.Email, &userLast.LastTime, &userLast.LastIp)
+	userLast := UserLastInfo{
+		LastIp:   userInfo.LastIp,
+		LastTime: userInfo.LastTime,
+	}
 	_ = setUserBaseInfo(userRedis.UserId, userLast)
 
 	// update last login info
-	_, _ = mysqlutil.D.Exec("UPDATE `account` SET `lastTime` = ?, `lastIp` = ? WHERE `id` = ?", time.Now().Unix(), clientIp, userRedis.UserId)
+	dbutil.D.Model(&dbutil.Account{}).Where("id = ?", userRedis.UserId).Updates(&dbutil.Account{LastTime: time.Now().Unix(), LastIp: clientIp})
 
 	headerJson, _ := json.Marshal(JwtHeader{
 		Alg: "HS256",
@@ -50,14 +53,14 @@ func GenerateJwt(userId int, clientIp string) (string, error) {
 	}
 	payloadJson, _ := json.Marshal(JwtPayload{
 		UserId: userId,
-		Iss:    config.C.Server.Title,
+		Iss:    config.Server.Title,
 		Iat:    time.Now().Unix(),
 		Jti:    Jti,
 	})
 
 	header := base64.StdEncoding.EncodeToString(headerJson)
 	payload := base64.StdEncoding.EncodeToString(payloadJson)
-	signature := header + "." + payload + "." + toolutil.Sha256(header+"."+payload, config.C.Jwt.Secret)
+	signature := header + "." + payload + "." + toolutil.Sha256(header+"."+payload, config.Jwt.Secret)
 	return signature, nil
 }
 
@@ -102,7 +105,7 @@ func CheckJwt(jwt string) (UserInfo, error) {
 	}
 	payloadJson, _ := base64.StdEncoding.DecodeString(_jwt[1])
 	signature := _jwt[2]
-	if toolutil.Sha256(_jwt[0]+"."+_jwt[1], config.C.Jwt.Secret) != signature {
+	if toolutil.Sha256(_jwt[0]+"."+_jwt[1], config.Jwt.Secret) != signature {
 		return UserInfo{}, errors.New("jwt signature error")
 	}
 	var payload JwtPayload

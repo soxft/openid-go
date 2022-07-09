@@ -3,20 +3,20 @@ package apputil
 import "errors"
 
 type AppBaseStruct struct {
-	Id         int    `json:"id"`
-	AppId      int    `json:"app_id"`
-	AppName    string `json:"app_name"`
-	CreateTime string `json:"create_time"`
+	Id       int    `json:"id"`
+	AppId    string `json:"app_id"`
+	AppName  string `json:"app_name"`
+	CreateAt int64  `json:"create_time"`
 }
 
 type AppFullInfoStruct struct {
 	Id         int    `json:"id"`
 	AppUserId  int    `json:"user_id"`
-	AppId      int    `json:"app_id"`
+	AppId      string `json:"app_id"`
 	AppName    string `json:"app_name"`
 	AppSecret  string `json:"app_secret"`
 	AppGateway string `json:"app_gateway"`
-	Time       int    `json:"create_time"`
+	CreateAt   int64  `json:"create_time"`
 }
 
 type AppErr = error
