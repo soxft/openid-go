@@ -103,13 +103,13 @@ func DeleteUserApp(appId string) (bool, error) {
 		var OpenId dbutil.OpenId
 
 		// 删除app表内数据
-		result := tx.Where("app_id = ?", appId).Delete(&App)
-		if result.Error != nil {
-			return result.Error
+		err := tx.Where("app_id = ?", appId).Delete(&App).Error
+		if err != nil {
+			return errors.New("system error")
 		}
 		// 删除openId表内数据
-		result = tx.Where("app_id = ?", appId).Delete(&OpenId)
-		if result.Error != nil {
+		err = tx.Where("app_id = ?", appId).Delete(&OpenId).Error
+		if err != nil {
 			return errors.New("system error")
 		}
 
@@ -240,8 +240,8 @@ func generateAppSecret() string {
 // CheckAppIdExists
 // @description: check if appid exists
 func checkAppIdExists(appid string) (bool, error) {
-	var appId dbutil.App
-	err := dbutil.D.Where(dbutil.App{AppId: appid}).Take(&appId).Error
+	var ID int64
+	err := dbutil.D.Model(dbutil.App{}).Select("id").Where(dbutil.App{AppId: appid}).Take(&ID).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return false, nil
 	} else if err != nil {
