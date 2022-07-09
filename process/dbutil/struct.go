@@ -1,7 +1,7 @@
 package dbutil
 
 type Account struct {
-	ID       uint
+	ID       int
 	Username string
 	Password string
 	Salt     string
@@ -13,9 +13,9 @@ type Account struct {
 }
 
 type App struct {
-	ID         uint
-	UserId     uint
-	AppId      int64
+	ID         int
+	UserId     int
+	AppId      string
 	AppName    string
 	AppSecret  string
 	AppGateway string
@@ -23,17 +23,17 @@ type App struct {
 }
 
 type OpenID struct {
-	ID       uint
-	UserId   uint
-	AppId    int64
+	ID       int
+	UserId   int
+	AppId    string
 	OpenId   string
 	CreateAt int64 `gorm:"autoCreateTime"`
 }
 
 type UniqueId struct {
-	ID        uint
-	UserId    uint
-	DevUserId uint
+	ID        int
+	UserId    int
+	DevUserId int
 	UniqueId  string
 	CreateAt  int64 `gorm:"autoCreateTime"`
 }

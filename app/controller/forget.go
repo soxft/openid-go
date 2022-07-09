@@ -2,7 +2,9 @@ package controller
 
 import (
 	"encoding/json"
+	"errors"
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 	"log"
 	"openid/library/apiutil"
 	"openid/library/codeutil"
@@ -91,28 +93,31 @@ func ForgetPasswordUpdate(c *gin.Context) {
 	// update password
 	salt := userutil.GenerateSalt()
 	passwordDb := toolutil.Sha1(newPassword + salt)
-	if res, err := dbutil.D.Exec("UPDATE `account` SET `password` = ?, `salt` = ? WHERE `email` = ?", passwordDb, salt, email); err != nil {
-		log.Printf("[ERROR] UserPasswordUpdate %v", err)
+
+	// get Username by email
+	var username string
+	result := dbutil.D.Model(&dbutil.Account{}).Where("email = ?", email).Select("username").Take(&username)
+	if result.Error != nil {
+		log.Printf("[ERROR] UserPasswordUpdate %v", result.Error)
 		api.Fail("system error")
 		return
-	} else if rows, _ := res.RowsAffected(); rows == 0 {
-		api.Fail("用户不存在")
+	} else if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		// 系统中不存在该邮箱
+		api.Fail("验证码错误或已过期")
+		return
+	}
+
+	result = dbutil.D.Model(&dbutil.Account{}).Where("email = ?", email).Updates(&dbutil.Account{Password: passwordDb, Salt: salt})
+	if result.Error != nil {
+		log.Printf("[ERROR] UserPasswordUpdate %v", result.Error)
+		api.Fail("system error")
 		return
 	}
 	coder.Consume("forgetPwd", email)
 
-	// get UserName
-	var username string
-	if err := dbutil.D.QueryRow("SELECT `username` FROM `account` WHERE `email` = ?", email).Scan(&username); err != nil {
-		log.Printf("[ERROR] UserPasswordUpdate %v", err)
-		api.Fail("system error")
-		return
-	}
+	// 修改密码后续安全操作
 	_ = userutil.SetUserJwtExpire(username, time.Now().Unix())
-
-	// 修改密码安全通知
 	userutil.PasswordChangeNotify(email, time.Now())
 
 	api.Success("修改成功!")
-
 }

@@ -65,14 +65,11 @@ func AppEdit(c *gin.Context) {
 	}
 
 	// do change
-	db, err := dbutil.D.Prepare("UPDATE `app` SET `appName` = ?, `appGateway` = ? WHERE `appId` = ?")
-	if err != nil {
-		log.Printf("[ERROR] mysqlutil.D.Prepare err: %v", err)
-		api.Fail("system error")
-		return
-	}
-	_, err = db.Exec(appName, appGateway, appIdInt)
-	if err != nil {
+	result := dbutil.D.Model(&dbutil.App{}).Where("app_id = ?", appIdInt).Updates(&dbutil.App{
+		AppName:    appName,
+		AppGateway: appGateway,
+	})
+	if result.Error != nil {
 		log.Printf("[ERROR] db.Exec err: %v", err)
 		api.Fail("system error")
 		return

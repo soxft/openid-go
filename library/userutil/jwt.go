@@ -1,11 +1,11 @@
 package userutil
 
 import (
-	"database/sql"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"github.com/gomodule/redigo/redis"
+	"gorm.io/gorm"
 	"log"
 	"openid/config"
 	"openid/library/toolutil"
@@ -20,23 +20,26 @@ import (
 // GenerateJwt
 // @description generate JWT token for user
 func GenerateJwt(userId int, clientIp string) (string, error) {
-	row, err := dbutil.D.Prepare("SELECT `id`,`username`,`email`,`lastTime`,`lastIp` FROM `account` WHERE `id` = ?")
-	if err != nil {
-		log.Printf("[ERROR] GenerateToken: %s", err.Error())
+	var userInfo dbutil.Account
+	err := dbutil.D.Model(&dbutil.Account{}).Select("id, username, email, last_time, last_ip").Where("id = ?", userId).Take(&userInfo).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return "", nil
+	} else if err != nil {
 		return "", err
 	}
-	res := row.QueryRow(userId)
-	if res.Err() == sql.ErrNoRows {
-		return "", nil
+	userRedis := UserInfo{
+		UserId:   userInfo.ID,
+		Username: userInfo.Username,
+		Email:    userInfo.Email,
 	}
-
-	userRedis := UserInfo{}
-	userLast := UserLastInfo{}
-	_ = res.Scan(&userRedis.UserId, &userRedis.Username, &userRedis.Email, &userLast.LastTime, &userLast.LastIp)
+	userLast := UserLastInfo{
+		LastIp:   userInfo.LastIp,
+		LastTime: userInfo.LastTime,
+	}
 	_ = setUserBaseInfo(userRedis.UserId, userLast)
 
 	// update last login info
-	_, _ = dbutil.D.Exec("UPDATE `account` SET `lastTime` = ?, `lastIp` = ? WHERE `id` = ?", time.Now().Unix(), clientIp, userRedis.UserId)
+	dbutil.D.Model(&dbutil.Account{}).Where("id = ?", userRedis.UserId).Updates(&dbutil.Account{LastTime: time.Now().Unix(), LastIp: clientIp})
 
 	headerJson, _ := json.Marshal(JwtHeader{
 		Alg: "HS256",

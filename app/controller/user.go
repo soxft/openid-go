@@ -72,14 +72,20 @@ func UserPasswordUpdate(c *gin.Context) {
 	// change password
 	salt := userutil.GenerateSalt()
 	passwordDb := toolutil.Sha1(newPassword + salt)
-	if res, err := dbutil.D.Exec("UPDATE `account` SET `password` = ?, `salt` = ? WHERE `id` = ?", passwordDb, salt, userId); err != nil {
-		log.Printf("[ERROR] UserPasswordUpdate %v", err)
+
+	result := dbutil.D.Model(&dbutil.Account{}).Where(&dbutil.Account{ID: userId}).Updates(&dbutil.Account{
+		Password: passwordDb,
+		Salt:     salt,
+	})
+	if result.Error != nil {
+		log.Printf("[ERROR] UserPasswordUpdate %v", result.Error)
 		api.Fail("system error")
 		return
-	} else if rows, _ := res.RowsAffected(); rows == 0 {
+	} else if result.RowsAffected == 0 {
 		api.Fail("用户不存在")
 		return
 	}
+
 	// make jwt token expire
 	_ = userutil.SetUserJwtExpire(c.GetString("username"), time.Now().Unix())
 
@@ -169,11 +175,13 @@ func UserEmailUpdate(c *gin.Context) {
 	}
 
 	// update email
-	if res, err := dbutil.D.Exec("UPDATE `account` SET `email` = ? WHERE `id` = ?", newEmail, c.GetInt("userId")); err != nil {
-		log.Printf("[ERROR] UserEmailUpdate %v", err)
+	userId := c.GetInt("userId") // get userid from middleware
+	result := dbutil.D.Model(&dbutil.Account{}).Where(&dbutil.Account{ID: userId}).Update("email", newEmail)
+	if result.Error != nil {
+		log.Printf("[ERROR] UserEmailUpdate %v", result.Error)
 		api.Fail("system error")
 		return
-	} else if rows, _ := res.RowsAffected(); rows == 0 {
+	} else if result.RowsAffected == 0 {
 		api.Fail("用户不存在")
 		return
 	}
