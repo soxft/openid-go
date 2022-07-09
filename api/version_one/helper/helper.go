@@ -1,21 +1,20 @@
 package helper
 
 import (
-	"database/sql"
 	"errors"
 	"github.com/gomodule/redigo/redis"
+	"gorm.io/gorm"
 	"log"
 	"openid/config"
 	"openid/library/apputil"
 	"openid/library/toolutil"
 	"openid/process/dbutil"
 	"openid/process/redisutil"
-	"strconv"
 )
 
 // GetUserIdByToken
 // 通过Token和appid 获取用户ID
-func GetUserIdByToken(appId int, token string) (int, error) {
+func GetUserIdByToken(appId string, token string) (int, error) {
 	_redis := redisutil.R.Get()
 	defer func() {
 		_ = _redis.Close()
@@ -34,7 +33,7 @@ func GetUserIdByToken(appId int, token string) (int, error) {
 
 // GetUserIds
 // @description 获取用户ID
-func GetUserIds(appId, userId int) (UserIdsStruct, error) {
+func GetUserIds(appId string, userId int) (UserIdsStruct, error) {
 	openId, err := getUserOpenId(appId, userId)
 	if err != nil {
 		return UserIdsStruct{}, err
@@ -54,7 +53,7 @@ func GetUserIds(appId, userId int) (UserIdsStruct, error) {
 	}, nil
 }
 
-func DeleteToken(appId int, token string) error {
+func DeleteToken(appId string, token string) error {
 	_redis := redisutil.R.Get()
 	defer func() {
 		_ = _redis.Close()
@@ -70,21 +69,12 @@ func DeleteToken(appId int, token string) error {
 
 // GetUserOpenId
 // 获取 用户openID
-func getUserOpenId(appId int, userId int) (string, error) {
-	db, err := dbutil.D.Prepare("SELECT `openId` FROM `openId` WHERE `userId` = ? AND `appId` = ?")
-	defer func() {
-		_ = db.Close()
-	}()
-	if err != nil {
-		log.Printf("[ERROR] GetUserOpenId error: %s", err)
-		return "", errors.New("server error")
-	}
+func getUserOpenId(appId string, userId int) (string, error) {
 	var openId string
-	if err := db.QueryRow(userId, appId).Scan(&openId); err != nil {
-		if err == sql.ErrNoRows {
-			// 无结果, 则创建一个
-			return generateOpenId(appId, userId)
-		}
+	err := dbutil.D.Model(&dbutil.OpenId{}).Where("user_id = ? AND app_id = ?", userId, appId).Select("open_id").First(&openId).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return generateOpenId(appId, userId)
+	} else if err != nil {
 		log.Printf("[ERROR] GetUserOpenId error: %s", err)
 		return "", errors.New("server error")
 	}
@@ -94,26 +84,17 @@ func getUserOpenId(appId int, userId int) (string, error) {
 // getUserUniqueId
 // 获取用户UniqueId
 func getUserUniqueId(userId, DevUserId int) (string, error) {
-	db, err := dbutil.D.Prepare("SELECT `uniqueId` FROM `uniqueId` WHERE `userId` = ? AND `devUserId` = ?")
-	defer func() {
-		_ = db.Close()
-	}()
-	if err != nil {
+	var uniqueId string
+	err := dbutil.D.Model(&dbutil.UniqueId{}).Where("user_id = ? AND dev_user_id = ?", userId, DevUserId).Select("unique_id").First(&uniqueId).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return generateUniqueId(userId, DevUserId)
+	} else if err != nil {
 		log.Printf("[ERROR] GetUserOpenId error: %s", err)
 		return "", errors.New("server error")
 	}
-	var openId string
-	if err := db.QueryRow(userId, DevUserId).Scan(&openId); err != nil {
-		if err == sql.ErrNoRows {
-			// 无结果, 则创建一个
-			return generateUniqueId(userId, DevUserId)
-		}
-		log.Printf("[ERROR] GetUserOpenId error: %s", err)
-		return "", errors.New("server error")
-	}
-	return openId, nil
+	return uniqueId, nil
 }
 
-func getTokenRedisKey(appId int, token string) string {
-	return config.RedisPrefix + ":app:" + toolutil.Md5(strconv.Itoa(appId)) + ":" + toolutil.Md5(token)
+func getTokenRedisKey(appId string, token string) string {
+	return config.RedisPrefix + ":app:" + toolutil.Md5(appId) + ":" + toolutil.Md5(token)
 }

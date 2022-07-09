@@ -22,7 +22,7 @@ type App struct {
 	CreateAt   int64 `gorm:"autoCreateTime"`
 }
 
-type OpenID struct {
+type OpenId struct {
 	ID       int
 	UserId   int
 	AppId    string
@@ -42,6 +42,6 @@ func (UniqueId) TableName() string {
 	return "unique_id"
 }
 
-func (OpenID) TableName() string {
+func (OpenId) TableName() string {
 	return "open_id"
 }

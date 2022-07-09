@@ -73,13 +73,13 @@ func CheckEmailExists(email string) (bool, error) {
 // CheckPassword
 // @description 验证用户登录
 func CheckPassword(username, password string) (int, error) {
-	var err error
 
+	var err error
 	var account dbutil.Account
 	if toolutil.IsEmail(username) {
-		err = dbutil.D.Select("id, salt, password").Where("email = ?", username).Take(&account).Error
+		err = dbutil.D.Select("id", "salt", "password").Where(dbutil.Account{Email: username}).Take(&account).Error
 	} else {
-		err = dbutil.D.Select("id, salt, password").Where("username = ?", username).Take(&account).Error
+		err = dbutil.D.Select("id", "salt", "password").Where(dbutil.Account{Username: username}).Take(&account).Error
 	}
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {

@@ -96,11 +96,11 @@ func CreateApp(userId int, appName string) (bool, error) {
 
 // DeleteUserApp
 // 删除用户App
-func DeleteUserApp(appId int) (bool, error) {
+func DeleteUserApp(appId string) (bool, error) {
 	// 开启 事物
 	err := dbutil.D.Transaction(func(tx *gorm.DB) error {
 		var App dbutil.App
-		var OpenId dbutil.OpenID
+		var OpenId dbutil.OpenId
 
 		// 删除app表内数据
 		result := tx.Where("app_id = ?", appId).Delete(&App)
@@ -159,7 +159,7 @@ func GetUserAppCount(userId int) (int, error) {
 	return countInt, nil
 }
 
-func GetAppInfo(appId int) (AppFullInfoStruct, error) {
+func GetAppInfo(appId string) (AppFullInfoStruct, error) {
 	var appInfo AppFullInfoStruct
 	var appInfoRaw dbutil.App
 
@@ -175,7 +175,7 @@ func GetAppInfo(appId int) (AppFullInfoStruct, error) {
 
 // CheckAppSecret
 // @description: 检查appSecret
-func CheckAppSecret(appId int, appSecret string) error {
+func CheckAppSecret(appId string, appSecret string) error {
 	appInfo, err := GetAppInfo(appId)
 	if err != nil {
 		return err
@@ -204,7 +204,7 @@ func generateAppId() (string, error) {
 
 // CheckIfUserApp
 // 判断是否为该用户的app
-func CheckIfUserApp(appId, userId int) (bool, error) {
+func CheckIfUserApp(appId string, userId int) (bool, error) {
 	var appUserId int
 	err := dbutil.D.Model(&dbutil.App{}).Select("user_id").Where("app_id = ?", appId).Take(&appUserId).Error
 	if err != nil {

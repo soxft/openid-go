@@ -5,7 +5,6 @@ import (
 	"openid/api/version_one/helper"
 	"openid/library/apiutil"
 	"openid/library/apputil"
-	"strconv"
 )
 
 // Info
@@ -23,20 +22,14 @@ func Info(c *gin.Context) {
 		return
 	}
 
-	appIdInt, err := strconv.Atoi(appId)
-	if err != nil {
-		api.Fail("appId is not a valid number")
-		return
-	}
-
 	// 判断appId与appSecret是否正确
-	if err := apputil.CheckAppSecret(appIdInt, appSecret); err != nil {
+	if err := apputil.CheckAppSecret(appId, appSecret); err != nil {
 		api.Fail(err.Error())
 		return
 	}
 
 	// 检测token是否正确 并获取userId
-	userId, err := helper.GetUserIdByToken(appIdInt, token)
+	userId, err := helper.GetUserIdByToken(appId, token)
 	if err != nil {
 		if err == helper.ErrTokenNotExists {
 			api.Fail("Token not exists")
@@ -45,13 +38,13 @@ func Info(c *gin.Context) {
 		api.Fail(err.Error())
 		return
 	}
-	userIds, err := helper.GetUserIds(appIdInt, userId)
+	userIds, err := helper.GetUserIds(appId, userId)
 	if err != nil {
 		api.Fail(err.Error())
 		return
 	}
 	// delete token
-	_ = helper.DeleteToken(appIdInt, token)
+	_ = helper.DeleteToken(appId, token)
 	api.SuccessWithData("success", gin.H{
 		"openId":   userIds.OpenId,
 		"uniqueId": userIds.UniqueId,

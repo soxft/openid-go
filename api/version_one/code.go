@@ -7,7 +7,6 @@ import (
 	"openid/api/version_one/helper"
 	"openid/library/apiutil"
 	"openid/library/apputil"
-	"strconv"
 )
 
 // Code
@@ -23,15 +22,9 @@ func Code(c *gin.Context) {
 		return
 	}
 
-	appIdInt, err := strconv.Atoi(appId)
-	if err != nil {
-		api.Fail("Invalid appid")
-		return
-	}
-
 	// 检测 redirect_uri 是否为app所对应的
 	var redirectUriDomain *url.URL
-	if redirectUriDomain, err = url.Parse(redirectUri); err != nil {
+	if redirectUriDomain, err := url.Parse(redirectUri); err != nil {
 		api.Fail("Invalid redirect_uri")
 		return
 	} else if redirectUriDomain.Host == "" {
@@ -41,7 +34,8 @@ func Code(c *gin.Context) {
 
 	// get app Info
 	var appInfo apputil.AppFullInfoStruct
-	if appInfo, err = apputil.GetAppInfo(appIdInt); err != nil {
+	var err error
+	if appInfo, err = apputil.GetAppInfo(appId); err != nil {
 		if err == apputil.ErrAppNotExist {
 			api.Fail("app not exist")
 			return
@@ -65,7 +59,7 @@ func Code(c *gin.Context) {
 		})
 		return
 	}
-	token, err := helper.GenerateToken(appIdInt, c.GetInt("userId"))
+	token, err := helper.GenerateToken(appId, c.GetInt("userId"))
 	if err != nil {
 		log.Printf("[ERROR] get app info error: %s", err.Error())
 		api.Fail("system error")
