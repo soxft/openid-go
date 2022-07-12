@@ -60,10 +60,7 @@ func AppEdit(c *gin.Context) {
 	}
 
 	// do change
-	err := dbutil.D.Model(&dbutil.App{}).Where("app_id = ?", appId).Updates(&dbutil.App{
-		AppName:    appName,
-		AppGateway: appGateway,
-	}).Error
+	err := dbutil.D.Model(dbutil.App{}).Where(dbutil.App{AppId: appId}).Updates(dbutil.App{AppName: appName, AppGateway: appGateway}).Error
 	if err != nil {
 		log.Printf("[ERROR] db.Exec err: %v", err)
 		api.Fail("system error")
