@@ -103,12 +103,12 @@ func DeleteUserApp(appId string) (bool, error) {
 		var OpenId dbutil.OpenId
 
 		// 删除app表内数据
-		err := tx.Where("app_id = ?", appId).Delete(&App).Error
+		err := tx.Where(dbutil.App{AppId: appId}).Delete(&App).Error
 		if err != nil {
 			return errors.New("system error")
 		}
 		// 删除openId表内数据
-		err = tx.Where("app_id = ?", appId).Delete(&OpenId).Error
+		err = tx.Where(dbutil.OpenId{AppId: appId}).Delete(&OpenId).Error
 		if err != nil {
 			return errors.New("system error")
 		}
@@ -129,9 +129,9 @@ func GetUserAppList(userId, limit, offset int) ([]AppBaseStruct, error) {
 	// 开始获取
 	var appList []AppBaseStruct
 	var appListRaw []dbutil.App
-	result := dbutil.D.Model(&dbutil.App{}).Select("id, app_id, app_name, create_at").Where("user_id = ?", userId).Order("id desc").Limit(limit).Offset(offset).Find(&appListRaw)
-	if result.Error != nil {
-		log.Printf("[ERROR] GetUserAppList error: %s", result.Error)
+	err := dbutil.D.Model(dbutil.App{}).Select("id, app_id, app_name, create_at").Where(dbutil.App{UserId: userId}).Order("id desc").Limit(limit).Offset(offset).Find(&appListRaw).Error
+	if err != nil {
+		log.Printf("[ERROR] GetUserAppList error: %s", err)
 		return nil, errors.New("GetUserAppList error")
 	}
 	for _, app := range appListRaw {
@@ -149,9 +149,9 @@ func GetUserAppList(userId, limit, offset int) ([]AppBaseStruct, error) {
 // 获取用户的app数量
 func GetUserAppCount(userId int) (int, error) {
 	var count int64
-	result := dbutil.D.Model(&dbutil.App{}).Where("user_id = ?", userId).Count(&count)
-	if result.Error != nil {
-		log.Printf("[ERROR] GetUserAppCount error: %s", result.Error)
+	err := dbutil.D.Model(&dbutil.App{}).Where(dbutil.App{UserId: userId}).Count(&count).Error
+	if err != nil {
+		log.Printf("[ERROR] GetUserAppCount error: %s", err)
 		return 0, errors.New("GetUserAppCount error")
 	}
 
@@ -163,7 +163,7 @@ func GetAppInfo(appId string) (AppFullInfoStruct, error) {
 	var appInfo AppFullInfoStruct
 	var appInfoRaw dbutil.App
 
-	err := dbutil.D.Model(&dbutil.App{}).Select("id, user_id, app_id, app_name, app_secret, app_gateway, create_at").Where("app_id = ?", appId).Take(&appInfoRaw).Error
+	err := dbutil.D.Model(&dbutil.App{}).Select("id, user_id, app_id, app_name, app_secret, app_gateway, create_at").Where(dbutil.App{AppId: appId}).Take(&appInfoRaw).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return appInfo, ErrAppNotExist
 	} else if err != nil {
@@ -215,7 +215,7 @@ func generateAppId() (string, error) {
 // 判断是否为该用户的app
 func CheckIfUserApp(appId string, userId int) (bool, error) {
 	var appUserId int
-	err := dbutil.D.Model(&dbutil.App{}).Select("user_id").Where("app_id = ?", appId).Take(&appUserId).Error
+	err := dbutil.D.Model(&dbutil.App{}).Select("user_id").Where(dbutil.App{AppId: appId}).Take(&appUserId).Error
 	if err != nil {
 		log.Printf("[ERROR] CheckIfUserApp error: %s", err)
 		return false, errors.New("server error")
