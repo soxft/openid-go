@@ -1,4 +1,4 @@
-module openid
+module github.com/soxft/openid
 
 go 1.18
 

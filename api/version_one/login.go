@@ -2,8 +2,8 @@ package version_one
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/soxft/openid/library/apiutil"
 	"net/url"
-	"openid/library/apiutil"
 )
 
 // Login

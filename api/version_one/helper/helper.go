@@ -3,13 +3,13 @@ package helper
 import (
 	"errors"
 	"github.com/gomodule/redigo/redis"
+	"github.com/soxft/openid/config"
+	"github.com/soxft/openid/library/apputil"
+	"github.com/soxft/openid/library/toolutil"
+	"github.com/soxft/openid/process/dbutil"
+	"github.com/soxft/openid/process/redisutil"
 	"gorm.io/gorm"
 	"log"
-	"openid/config"
-	"openid/library/apputil"
-	"openid/library/toolutil"
-	"openid/process/dbutil"
-	"openid/process/redisutil"
 )
 
 // GetUserIdByToken

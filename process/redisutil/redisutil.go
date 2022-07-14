@@ -2,8 +2,8 @@ package redisutil
 
 import (
 	"github.com/gomodule/redigo/redis"
+	"github.com/soxft/openid/config"
 	"log"
-	"openid/config"
 )
 
 var R *redis.Pool

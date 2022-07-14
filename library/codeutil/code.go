@@ -2,10 +2,10 @@ package codeutil
 
 import (
 	"github.com/gomodule/redigo/redis"
+	"github.com/soxft/openid/config"
+	"github.com/soxft/openid/library/toolutil"
+	"github.com/soxft/openid/process/redisutil"
 	"math/rand"
-	"openid/config"
-	"openid/library/toolutil"
-	"openid/process/redisutil"
 	"strconv"
 	"time"
 )

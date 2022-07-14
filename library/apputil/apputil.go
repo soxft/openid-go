@@ -2,13 +2,13 @@ package apputil
 
 import (
 	"errors"
+	"github.com/soxft/openid/config"
+	"github.com/soxft/openid/library/toolutil"
+	"github.com/soxft/openid/process/dbutil"
 	"gorm.io/gorm"
 	"html"
 	"log"
 	"math/rand"
-	"openid/config"
-	"openid/library/toolutil"
-	"openid/process/dbutil"
 	"strconv"
 	"strings"
 	"time"

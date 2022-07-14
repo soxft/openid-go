@@ -2,7 +2,7 @@ package middleware
 
 import (
 	"github.com/gin-gonic/gin"
-	"openid/config"
+	"github.com/soxft/openid/config"
 )
 
 func Cors() gin.HandlerFunc {
