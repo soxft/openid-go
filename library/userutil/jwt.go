@@ -21,14 +21,14 @@ import (
 // @description generate JWT token for user
 func GenerateJwt(userId int, clientIp string) (string, error) {
 	var userInfo dbutil.Account
-	err := dbutil.D.Model(&dbutil.Account{}).Select("id, username, email, last_time, last_ip").Where("id = ?", userId).Take(&userInfo).Error
+	err := dbutil.D.Model(dbutil.Account{}).Select("id, username, email, last_time, last_ip").Where(dbutil.Account{ID: userId}).Take(&userInfo).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return "", nil
 	} else if err != nil {
 		return "", err
 	}
 	userRedis := UserInfo{
-		UserId:   userInfo.ID,
+		UserId:   userId,
 		Username: userInfo.Username,
 		Email:    userInfo.Email,
 	}
@@ -39,7 +39,7 @@ func GenerateJwt(userId int, clientIp string) (string, error) {
 	_ = setUserBaseInfo(userRedis.UserId, userLast)
 
 	// update last login info
-	dbutil.D.Model(&dbutil.Account{}).Where("id = ?", userRedis.UserId).Updates(&dbutil.Account{LastTime: time.Now().Unix(), LastIp: clientIp})
+	dbutil.D.Model(&dbutil.Account{}).Where(dbutil.Account{ID: userId}).Updates(&dbutil.Account{LastTime: time.Now().Unix(), LastIp: clientIp})
 
 	headerJson, _ := json.Marshal(JwtHeader{
 		Alg: "HS256",

@@ -71,7 +71,8 @@ func DeleteToken(appId string, token string) error {
 // 获取 用户openID
 func getUserOpenId(appId string, userId int) (string, error) {
 	var openId string
-	err := dbutil.D.Model(&dbutil.OpenId{}).Where("user_id = ? AND app_id = ?", userId, appId).Select("open_id").First(&openId).Error
+	err := dbutil.D.Model(&dbutil.OpenId{}).Where(dbutil.OpenId{AppId: appId, UserId: userId}).Select("open_id").First(&openId).Error
+
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return generateOpenId(appId, userId)
 	} else if err != nil {
@@ -85,11 +86,12 @@ func getUserOpenId(appId string, userId int) (string, error) {
 // 获取用户UniqueId
 func getUserUniqueId(userId, DevUserId int) (string, error) {
 	var uniqueId string
-	err := dbutil.D.Model(&dbutil.UniqueId{}).Where("user_id = ? AND dev_user_id = ?", userId, DevUserId).Select("unique_id").First(&uniqueId).Error
+	err := dbutil.D.Model(&dbutil.UniqueId{}).Where(dbutil.UniqueId{UserId: userId, DevUserId: DevUserId}).Select("unique_id").First(&uniqueId).Error
+
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return generateUniqueId(userId, DevUserId)
 	} else if err != nil {
-		log.Printf("[ERROR] GetUserOpenId error: %s", err)
+		log.Printf("[ERROR] GetUserUniqueId error: %s", err)
 		return "", errors.New("server error")
 	}
 	return uniqueId, nil

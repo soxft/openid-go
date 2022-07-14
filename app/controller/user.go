@@ -73,10 +73,8 @@ func UserPasswordUpdate(c *gin.Context) {
 	salt := userutil.GenerateSalt()
 	passwordDb := toolutil.Sha1(newPassword + salt)
 
-	result := dbutil.D.Model(&dbutil.Account{}).Where(&dbutil.Account{ID: userId}).Updates(&dbutil.Account{
-		Password: passwordDb,
-		Salt:     salt,
-	})
+	result := dbutil.D.Model(dbutil.Account{}).Where(&dbutil.Account{ID: userId}).Updates(&dbutil.Account{Password: passwordDb, Salt: salt})
+
 	if result.Error != nil {
 		log.Printf("[ERROR] UserPasswordUpdate %v", result.Error)
 		api.Fail("system error")

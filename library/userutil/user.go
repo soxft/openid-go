@@ -46,7 +46,7 @@ func RegisterCheck(username, email string) error {
 // @description Check username if exists in database
 func CheckUserNameExists(username string) (bool, error) {
 	var ID int64
-	err := dbutil.D.Model(&dbutil.Account{}).Select("id").Where("username = ?", username).First(&ID).Error
+	err := dbutil.D.Model(&dbutil.Account{}).Select("id").Where(dbutil.Account{Username: username}).First(&ID).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return false, nil
 	} else if err != nil {
@@ -115,7 +115,7 @@ func GetUserLast(userId int) UserLastInfo {
 func CheckPasswordByUserId(userId int, password string) (bool, error) {
 	// rewrite by gorm
 	var account dbutil.Account
-	err := dbutil.D.Model(&dbutil.Account{}).Select("id, salt, password").Where("id = ?", userId).Take(&account).Error
+	err := dbutil.D.Model(dbutil.Account{}).Select("id, salt, password").Where(dbutil.Account{ID: userId}).Take(&account).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return false, nil
 	} else if err != nil {

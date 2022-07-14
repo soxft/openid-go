@@ -56,7 +56,7 @@ func generateOpenId(appId string, userId int) (string, error) {
 
 	openId := a + "." + b + "." + c + d
 	openId = strings.ToLower(openId)
-	err := dbutil.D.Model(&dbutil.OpenId{}).Where("open_id = ?", openId).First(&dbutil.OpenId{}).Error
+	err := dbutil.D.Model(&dbutil.OpenId{}).Where(dbutil.OpenId{OpenId: openId}).First(&dbutil.OpenId{}).Error
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		// 不存在
@@ -90,7 +90,7 @@ func generateUniqueId(userId, devUserId int) (string, error) {
 	uniqueId := a + "." + b + "." + c + d
 	uniqueId = strings.ToLower(uniqueId)
 
-	err := dbutil.D.Model(&dbutil.UniqueId{}).Where("unique_id = ?", uniqueId).First(&dbutil.UniqueId{}).Error
+	err := dbutil.D.Model(&dbutil.UniqueId{}).Where(dbutil.UniqueId{UniqueId: uniqueId}).First(&dbutil.UniqueId{}).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		// 不存在
 		err := dbutil.D.Create(&dbutil.UniqueId{

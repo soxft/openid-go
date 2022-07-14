@@ -96,20 +96,20 @@ func ForgetPasswordUpdate(c *gin.Context) {
 
 	// get Username by email
 	var username string
-	result := dbutil.D.Model(&dbutil.Account{}).Where("email = ?", email).Select("username").Take(&username)
-	if result.Error != nil {
-		log.Printf("[ERROR] UserPasswordUpdate %v", result.Error)
-		api.Fail("system error")
-		return
-	} else if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+	err := dbutil.D.Model(dbutil.Account{}).Where(dbutil.Account{Email: email}).Select("username").Take(&username).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
 		// 系统中不存在该邮箱
 		api.Fail("验证码错误或已过期")
 		return
+	} else if err != nil {
+		log.Printf("[ERROR] GetUsername SQL: %s", err)
+		api.Fail("system error")
+		return
 	}
 
-	result = dbutil.D.Model(&dbutil.Account{}).Where("email = ?", email).Updates(&dbutil.Account{Password: passwordDb, Salt: salt})
-	if result.Error != nil {
-		log.Printf("[ERROR] UserPasswordUpdate %v", result.Error)
+	err = dbutil.D.Model(dbutil.Account{}).Where(dbutil.Account{Email: email}).Updates(&dbutil.Account{Password: passwordDb, Salt: salt}).Error
+	if err != nil {
+		log.Printf("[ERROR] UserPasswordUpdate %v", err)
 		api.Fail("system error")
 		return
 	}
