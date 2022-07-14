@@ -3,7 +3,7 @@ package mailutil
 import (
 	"github.com/aliyun/alibaba-cloud-sdk-go/sdk"
 	"github.com/aliyun/alibaba-cloud-sdk-go/sdk/requests"
-	"openid/config"
+	"github.com/soxft/openid/config"
 )
 
 func SendByAliyun(mail Mail) error {

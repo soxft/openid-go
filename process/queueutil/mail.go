@@ -2,8 +2,8 @@ package queueutil
 
 import (
 	"encoding/json"
+	"github.com/soxft/openid/library/mailutil"
 	"log"
-	"openid/library/mailutil"
 )
 
 // Mail

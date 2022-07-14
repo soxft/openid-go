@@ -1,6 +1,6 @@
 package main
 
-import "openid/process/webutil"
+import "github.com/soxft/openid/process/webutil"
 
 func main() {
 	webutil.Init()

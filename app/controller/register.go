@@ -3,15 +3,15 @@ package controller
 import (
 	"encoding/json"
 	"github.com/gin-gonic/gin"
+	"github.com/soxft/openid/config"
+	"github.com/soxft/openid/library/apiutil"
+	"github.com/soxft/openid/library/codeutil"
+	"github.com/soxft/openid/library/mailutil"
+	"github.com/soxft/openid/library/toolutil"
+	"github.com/soxft/openid/library/userutil"
+	"github.com/soxft/openid/process/dbutil"
+	"github.com/soxft/openid/process/queueutil"
 	"log"
-	"openid/config"
-	"openid/library/apiutil"
-	"openid/library/codeutil"
-	"openid/library/mailutil"
-	"openid/library/toolutil"
-	"openid/library/userutil"
-	"openid/process/dbutil"
-	"openid/process/queueutil"
 	"time"
 )
 

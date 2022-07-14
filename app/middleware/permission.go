@@ -2,8 +2,8 @@ package middleware
 
 import (
 	"github.com/gin-gonic/gin"
-	"openid/library/apiutil"
-	"openid/library/userutil"
+	"github.com/soxft/openid/library/apiutil"
+	"github.com/soxft/openid/library/userutil"
 )
 
 func AuthPermission() gin.HandlerFunc {

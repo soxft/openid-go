@@ -2,9 +2,9 @@ package version_one
 
 import (
 	"github.com/gin-gonic/gin"
-	"openid/api/version_one/helper"
-	"openid/library/apiutil"
-	"openid/library/apputil"
+	"github.com/soxft/openid/api/version_one/helper"
+	"github.com/soxft/openid/library/apiutil"
+	"github.com/soxft/openid/library/apputil"
 )
 
 // Info

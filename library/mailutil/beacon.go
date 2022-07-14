@@ -3,9 +3,9 @@ package mailutil
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/gomodule/redigo/redis"
-	"openid/config"
-	"openid/library/toolutil"
-	"openid/process/redisutil"
+	"github.com/soxft/openid/config"
+	"github.com/soxft/openid/library/toolutil"
+	"github.com/soxft/openid/process/redisutil"
 )
 
 // CreateBeacon
