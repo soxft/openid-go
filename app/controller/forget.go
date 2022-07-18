@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/gin-gonic/gin"
+	"github.com/soxft/openid/app/model"
 	"github.com/soxft/openid/library/apiutil"
 	"github.com/soxft/openid/library/codeutil"
 	"github.com/soxft/openid/library/mailutil"
@@ -96,7 +97,7 @@ func ForgetPasswordUpdate(c *gin.Context) {
 
 	// get Username by email
 	var username string
-	err := dbutil.D.Model(dbutil.Account{}).Where(dbutil.Account{Email: email}).Select("username").Take(&username).Error
+	err := dbutil.D.Model(model.Account{}).Where(model.Account{Email: email}).Select("username").Take(&username).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		// 系统中不存在该邮箱
 		api.Fail("验证码错误或已过期")
@@ -107,7 +108,7 @@ func ForgetPasswordUpdate(c *gin.Context) {
 		return
 	}
 
-	err = dbutil.D.Model(dbutil.Account{}).Where(dbutil.Account{Email: email}).Updates(&dbutil.Account{Password: passwordDb, Salt: salt}).Error
+	err = dbutil.D.Model(model.Account{}).Where(model.Account{Email: email}).Updates(&model.Account{Password: passwordDb, Salt: salt}).Error
 	if err != nil {
 		log.Printf("[ERROR] UserPasswordUpdate %v", err)
 		api.Fail("system error")

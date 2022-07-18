@@ -3,6 +3,7 @@ package helper
 import (
 	"errors"
 	"github.com/gomodule/redigo/redis"
+	"github.com/soxft/openid/app/model"
 	"github.com/soxft/openid/library/toolutil"
 	"github.com/soxft/openid/process/dbutil"
 	"github.com/soxft/openid/process/redisutil"
@@ -56,11 +57,11 @@ func generateOpenId(appId string, userId int) (string, error) {
 
 	openId := a + "." + b + "." + c + d
 	openId = strings.ToLower(openId)
-	err := dbutil.D.Model(&dbutil.OpenId{}).Where(dbutil.OpenId{OpenId: openId}).First(&dbutil.OpenId{}).Error
+	err := dbutil.D.Model(&model.OpenId{}).Where(model.OpenId{OpenId: openId}).First(&model.OpenId{}).Error
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		// 不存在
-		err := dbutil.D.Create(&dbutil.OpenId{
+		err := dbutil.D.Create(&model.OpenId{
 			UserId: userId,
 			AppId:  appId,
 			OpenId: openId,
@@ -90,10 +91,10 @@ func generateUniqueId(userId, devUserId int) (string, error) {
 	uniqueId := a + "." + b + "." + c + d
 	uniqueId = strings.ToLower(uniqueId)
 
-	err := dbutil.D.Model(&dbutil.UniqueId{}).Where(dbutil.UniqueId{UniqueId: uniqueId}).First(&dbutil.UniqueId{}).Error
+	err := dbutil.D.Model(&model.UniqueId{}).Where(model.UniqueId{UniqueId: uniqueId}).First(&model.UniqueId{}).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		// 不存在
-		err := dbutil.D.Create(&dbutil.UniqueId{
+		err := dbutil.D.Create(&model.UniqueId{
 			UserId:    userId,
 			DevUserId: devUserId,
 			UniqueId:  uniqueId,

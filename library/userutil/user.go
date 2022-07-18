@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/gomodule/redigo/redis"
+	"github.com/soxft/openid/app/model"
 	"github.com/soxft/openid/config"
 	"github.com/soxft/openid/library/mailutil"
 	"github.com/soxft/openid/library/toolutil"
@@ -46,7 +47,7 @@ func RegisterCheck(username, email string) error {
 // @description Check username if exists in database
 func CheckUserNameExists(username string) (bool, error) {
 	var ID int64
-	err := dbutil.D.Model(&dbutil.Account{}).Select("id").Where(dbutil.Account{Username: username}).First(&ID).Error
+	err := dbutil.D.Model(&model.Account{}).Select("id").Where(model.Account{Username: username}).First(&ID).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return false, nil
 	} else if err != nil {
@@ -60,7 +61,7 @@ func CheckUserNameExists(username string) (bool, error) {
 // @description Check email if exists in database
 func CheckEmailExists(email string) (bool, error) {
 	var ID string
-	err := dbutil.D.Model(&dbutil.Account{}).Select("id").Where(&dbutil.Account{Email: email}).Take(&ID).Error
+	err := dbutil.D.Model(&model.Account{}).Select("id").Where(&model.Account{Email: email}).Take(&ID).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return false, nil
 	} else if err != nil {
@@ -75,11 +76,11 @@ func CheckEmailExists(email string) (bool, error) {
 func CheckPassword(username, password string) (int, error) {
 
 	var err error
-	var account dbutil.Account
+	var account model.Account
 	if toolutil.IsEmail(username) {
-		err = dbutil.D.Select("id, salt, password").Where(dbutil.Account{Email: username}).Take(&account).Error
+		err = dbutil.D.Select("id, salt, password").Where(model.Account{Email: username}).Take(&account).Error
 	} else {
-		err = dbutil.D.Select("id, salt, password").Where(dbutil.Account{Username: username}).Take(&account).Error
+		err = dbutil.D.Select("id, salt, password").Where(model.Account{Username: username}).Take(&account).Error
 	}
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -114,8 +115,8 @@ func GetUserLast(userId int) UserLastInfo {
 // @description 通过userid验证用户password
 func CheckPasswordByUserId(userId int, password string) (bool, error) {
 	// rewrite by gorm
-	var account dbutil.Account
-	err := dbutil.D.Model(dbutil.Account{}).Select("id, salt, password").Where(dbutil.Account{ID: userId}).Take(&account).Error
+	var account model.Account
+	err := dbutil.D.Model(model.Account{}).Select("id, salt, password").Where(model.Account{ID: userId}).Take(&account).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return false, nil
 	} else if err != nil {

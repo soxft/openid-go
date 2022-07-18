@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/gomodule/redigo/redis"
+	"github.com/soxft/openid/app/model"
 	"github.com/soxft/openid/config"
 	"github.com/soxft/openid/library/toolutil"
 	"github.com/soxft/openid/process/dbutil"
@@ -20,8 +21,8 @@ import (
 // GenerateJwt
 // @description generate JWT token for user
 func GenerateJwt(userId int, clientIp string) (string, error) {
-	var userInfo dbutil.Account
-	err := dbutil.D.Model(dbutil.Account{}).Select("id, username, email, last_time, last_ip").Where(dbutil.Account{ID: userId}).Take(&userInfo).Error
+	var userInfo model.Account
+	err := dbutil.D.Model(model.Account{}).Select("id, username, email, last_time, last_ip").Where(model.Account{ID: userId}).Take(&userInfo).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return "", nil
 	} else if err != nil {
@@ -39,7 +40,7 @@ func GenerateJwt(userId int, clientIp string) (string, error) {
 	_ = setUserBaseInfo(userRedis.UserId, userLast)
 
 	// update last login info
-	dbutil.D.Model(&dbutil.Account{}).Where(dbutil.Account{ID: userId}).Updates(&dbutil.Account{LastTime: time.Now().Unix(), LastIp: clientIp})
+	dbutil.D.Model(&model.Account{}).Where(model.Account{ID: userId}).Updates(&model.Account{LastTime: time.Now().Unix(), LastIp: clientIp})
 
 	headerJson, _ := json.Marshal(JwtHeader{
 		Alg: "HS256",

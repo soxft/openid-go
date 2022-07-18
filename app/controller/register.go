@@ -3,6 +3,7 @@ package controller
 import (
 	"encoding/json"
 	"github.com/gin-gonic/gin"
+	"github.com/soxft/openid/app/model"
 	"github.com/soxft/openid/config"
 	"github.com/soxft/openid/library/apiutil"
 	"github.com/soxft/openid/library/codeutil"
@@ -118,7 +119,7 @@ func RegisterSubmit(c *gin.Context) {
 	pwd := toolutil.Sha1(password + salt)
 
 	// insert to Database
-	newUser := dbutil.Account{
+	newUser := model.Account{
 		Username: username,
 		Password: pwd,
 		Salt:     salt,

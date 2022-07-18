@@ -2,6 +2,7 @@ package controller
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/soxft/openid/app/model"
 	"github.com/soxft/openid/library/apiutil"
 	"github.com/soxft/openid/library/apputil"
 	"github.com/soxft/openid/process/dbutil"
@@ -60,7 +61,7 @@ func AppEdit(c *gin.Context) {
 	}
 
 	// do change
-	err := dbutil.D.Model(dbutil.App{}).Where(dbutil.App{AppId: appId}).Updates(dbutil.App{AppName: appName, AppGateway: appGateway}).Error
+	err := dbutil.D.Model(model.App{}).Where(model.App{AppId: appId}).Updates(model.App{AppName: appName, AppGateway: appGateway}).Error
 	if err != nil {
 		log.Printf("[ERROR] db.Exec err: %v", err)
 		api.Fail("system error")

@@ -3,6 +3,7 @@ package controller
 import (
 	"encoding/json"
 	"github.com/gin-gonic/gin"
+	"github.com/soxft/openid/app/model"
 	"github.com/soxft/openid/library/apiutil"
 	"github.com/soxft/openid/library/codeutil"
 	"github.com/soxft/openid/library/mailutil"
@@ -73,7 +74,7 @@ func UserPasswordUpdate(c *gin.Context) {
 	salt := userutil.GenerateSalt()
 	passwordDb := toolutil.Sha1(newPassword + salt)
 
-	result := dbutil.D.Model(dbutil.Account{}).Where(&dbutil.Account{ID: userId}).Updates(&dbutil.Account{Password: passwordDb, Salt: salt})
+	result := dbutil.D.Model(model.Account{}).Where(&model.Account{ID: userId}).Updates(&model.Account{Password: passwordDb, Salt: salt})
 
 	if result.Error != nil {
 		log.Printf("[ERROR] UserPasswordUpdate %v", result.Error)
@@ -174,7 +175,7 @@ func UserEmailUpdate(c *gin.Context) {
 
 	// update email
 	userId := c.GetInt("userId") // get userid from middleware
-	result := dbutil.D.Model(&dbutil.Account{}).Where(&dbutil.Account{ID: userId}).Update("email", newEmail)
+	result := dbutil.D.Model(&model.Account{}).Where(&model.Account{ID: userId}).Update("email", newEmail)
 	if result.Error != nil {
 		log.Printf("[ERROR] UserEmailUpdate %v", result.Error)
 		api.Fail("system error")

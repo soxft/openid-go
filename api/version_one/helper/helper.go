@@ -3,6 +3,7 @@ package helper
 import (
 	"errors"
 	"github.com/gomodule/redigo/redis"
+	"github.com/soxft/openid/app/model"
 	"github.com/soxft/openid/config"
 	"github.com/soxft/openid/library/apputil"
 	"github.com/soxft/openid/library/toolutil"
@@ -71,7 +72,7 @@ func DeleteToken(appId string, token string) error {
 // 获取 用户openID
 func getUserOpenId(appId string, userId int) (string, error) {
 	var openId string
-	err := dbutil.D.Model(&dbutil.OpenId{}).Where(dbutil.OpenId{AppId: appId, UserId: userId}).Select("open_id").First(&openId).Error
+	err := dbutil.D.Model(&model.OpenId{}).Where(model.OpenId{AppId: appId, UserId: userId}).Select("open_id").First(&openId).Error
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return generateOpenId(appId, userId)
@@ -86,7 +87,7 @@ func getUserOpenId(appId string, userId int) (string, error) {
 // 获取用户UniqueId
 func getUserUniqueId(userId, DevUserId int) (string, error) {
 	var uniqueId string
-	err := dbutil.D.Model(&dbutil.UniqueId{}).Where(dbutil.UniqueId{UserId: userId, DevUserId: DevUserId}).Select("unique_id").First(&uniqueId).Error
+	err := dbutil.D.Model(&model.UniqueId{}).Where(model.UniqueId{UserId: userId, DevUserId: DevUserId}).Select("unique_id").First(&uniqueId).Error
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return generateUniqueId(userId, DevUserId)
