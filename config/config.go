@@ -14,6 +14,7 @@ var (
 	Aliyun      AliyunConfig
 	Jwt         JwtConfig
 	Developer   DeveloperConfig
+	Github      GithubConfig
 	RedisPrefix string
 )
 
@@ -33,5 +34,6 @@ func init() {
 	Aliyun = C.AliyunConfig
 	Jwt = C.JwtConfig
 	Developer = C.DeveloperConfig
+	Github = C.GithubConfig
 	RedisPrefix = C.RedisConfig.Prefix
 }

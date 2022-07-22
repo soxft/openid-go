@@ -7,13 +7,16 @@ type Config struct {
 	AliyunConfig    `yaml:"Aliyun"`
 	JwtConfig       `yaml:"Jwt"`
 	DeveloperConfig `yaml:"Developer"`
+	GithubConfig    `yaml:"Github"`
 }
+
 type ServerConfig struct {
 	Addr  string `yaml:"Address"`
 	Debug bool   `yaml:"Debug"`
 	Log   bool   `yaml:"Log"`
 	Title string `yaml:"Title"`
 	Name  string `yaml:"ServerName"`
+	Url   string `yaml:"Url"`
 }
 
 type RedisConfig struct {
@@ -48,4 +51,9 @@ type JwtConfig struct {
 
 type DeveloperConfig struct {
 	AppLimit int `yaml:"AppLimit"`
+}
+
+type GithubConfig struct {
+	ClientID     string `yaml:"ClientID"`
+	ClientSecret string `yaml:"ClientSecret"`
 }
