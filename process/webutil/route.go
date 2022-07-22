@@ -27,6 +27,11 @@ func initRoute(r *gin.Engine) {
 			// login
 			r.POST("/login", controller.Login)
 		}
+		login := r.Group("/login")
+		{
+			login.GET("/github/redirect", controller.GithubRedirect)
+			login.GET("/github/handler", controller.GithubHandler)
+		}
 
 		user := r.Group("/user")
 		{
