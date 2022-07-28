@@ -1,8 +1,8 @@
 package queueutil
 
 import (
-	"github.com/soxft/openid/library/mq"
-	"github.com/soxft/openid/process/redisutil"
+	"github.com/soxft/openid-go/library/mq"
+	"github.com/soxft/openid-go/process/redisutil"
 )
 
 var Q mq.MessageQueue

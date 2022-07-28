@@ -2,7 +2,7 @@ package controller
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/soxft/openid/library/apiutil"
+	"github.com/soxft/openid-go/library/apiutil"
 	"time"
 )
 

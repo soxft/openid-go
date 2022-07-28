@@ -2,8 +2,8 @@ package webutil
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/soxft/openid/config"
-	"github.com/soxft/openid/process/queueutil"
+	"github.com/soxft/openid-go/config"
+	"github.com/soxft/openid-go/process/queueutil"
 	"log"
 	"os"
 )

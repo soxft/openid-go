@@ -2,10 +2,10 @@ package controller
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/soxft/openid/app/model"
-	"github.com/soxft/openid/library/apiutil"
-	"github.com/soxft/openid/library/apputil"
-	"github.com/soxft/openid/process/dbutil"
+	"github.com/soxft/openid-go/app/model"
+	"github.com/soxft/openid-go/library/apiutil"
+	"github.com/soxft/openid-go/library/apputil"
+	"github.com/soxft/openid-go/process/dbutil"
 	"log"
 	"strconv"
 	"strings"

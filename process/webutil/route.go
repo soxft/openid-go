@@ -2,10 +2,10 @@ package webutil
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/soxft/openid/api/version_one"
-	"github.com/soxft/openid/app/controller"
-	"github.com/soxft/openid/app/middleware"
-	"github.com/soxft/openid/config"
+	"github.com/soxft/openid-go/api/version_one"
+	"github.com/soxft/openid-go/app/controller"
+	"github.com/soxft/openid-go/app/middleware"
+	"github.com/soxft/openid-go/config"
 )
 
 func initRoute(r *gin.Engine) {

@@ -2,8 +2,8 @@ package version_one
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/soxft/openid/library/apiutil"
-	"github.com/soxft/openid/library/apputil"
+	"github.com/soxft/openid-go/library/apiutil"
+	"github.com/soxft/openid-go/library/apputil"
 )
 
 // AppInfo

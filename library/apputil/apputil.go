@@ -2,10 +2,10 @@ package apputil
 
 import (
 	"errors"
-	"github.com/soxft/openid/app/model"
-	"github.com/soxft/openid/config"
-	"github.com/soxft/openid/library/toolutil"
-	"github.com/soxft/openid/process/dbutil"
+	"github.com/soxft/openid-go/app/model"
+	"github.com/soxft/openid-go/config"
+	"github.com/soxft/openid-go/library/toolutil"
+	"github.com/soxft/openid-go/process/dbutil"
 	"gorm.io/gorm"
 	"html"
 	"log"

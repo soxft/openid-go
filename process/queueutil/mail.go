@@ -2,7 +2,7 @@ package queueutil
 
 import (
 	"encoding/json"
-	"github.com/soxft/openid/library/mailutil"
+	"github.com/soxft/openid-go/library/mailutil"
 	"log"
 )
 

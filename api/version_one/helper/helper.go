@@ -3,12 +3,12 @@ package helper
 import (
 	"errors"
 	"github.com/gomodule/redigo/redis"
-	"github.com/soxft/openid/app/model"
-	"github.com/soxft/openid/config"
-	"github.com/soxft/openid/library/apputil"
-	"github.com/soxft/openid/library/toolutil"
-	"github.com/soxft/openid/process/dbutil"
-	"github.com/soxft/openid/process/redisutil"
+	"github.com/soxft/openid-go/app/model"
+	"github.com/soxft/openid-go/config"
+	"github.com/soxft/openid-go/library/apputil"
+	"github.com/soxft/openid-go/library/toolutil"
+	"github.com/soxft/openid-go/process/dbutil"
+	"github.com/soxft/openid-go/process/redisutil"
 	"gorm.io/gorm"
 	"log"
 )

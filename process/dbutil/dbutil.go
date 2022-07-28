@@ -2,7 +2,7 @@ package dbutil
 
 import (
 	"fmt"
-	"github.com/soxft/openid/config"
+	"github.com/soxft/openid-go/config"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
