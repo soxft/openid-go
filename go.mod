@@ -5,6 +5,7 @@ go 1.18
 require (
 	github.com/aliyun/alibaba-cloud-sdk-go v1.61.1582
 	github.com/gin-gonic/gin v1.6.3
+	github.com/go-resty/resty/v2 v2.7.0
 	github.com/gomodule/redigo v1.8.8
 	gopkg.in/yaml.v2 v2.4.0
 	gorm.io/driver/mysql v1.3.4
@@ -16,7 +17,6 @@ require (
 	github.com/go-playground/locales v0.14.0 // indirect
 	github.com/go-playground/universal-translator v0.18.0 // indirect
 	github.com/go-playground/validator/v10 v10.3.0 // indirect
-	github.com/go-resty/resty/v2 v2.7.0 // indirect
 	github.com/go-sql-driver/mysql v1.6.0 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
