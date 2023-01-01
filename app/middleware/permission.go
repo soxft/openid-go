@@ -16,13 +16,14 @@ func AuthPermission() gin.HandlerFunc {
 			api.Abort401("Unauthorized", 0)
 			return
 		}
-		if userInfo, err := userutil.CheckJwt(token); err != nil {
+		if userInfo, err := userutil.CheckPermission(token); err != nil {
 			api.Abort401("Unauthorized", 1)
 			return
 		} else {
 			c.Set("userId", userInfo.UserId)
 			c.Set("username", userInfo.Username)
 			c.Set("email", userInfo.Email)
+			c.Set("lastTime", userInfo.LastTime)
 			c.Set("token", token)
 		}
 		c.Next()
