@@ -31,12 +31,11 @@ func UserInfo(c *gin.Context) {
 	api := apiutil.New(c)
 
 	userId := c.GetInt("userId")
-	userLast := userutil.GetUserLast(userId)
 	api.SuccessWithData("success", gin.H{
 		"userId":   userId,
 		"username": c.GetString("username"),
 		"email":    c.GetString("email"),
-		"lastTime": userLast.LastTime,
+		"lastTime": c.GetInt("lastTime"),
 	})
 }
 
@@ -44,7 +43,7 @@ func UserInfo(c *gin.Context) {
 // @description 用户退出
 func UserLogout(c *gin.Context) {
 	api := apiutil.New(c)
-	_ = userutil.DelJti(c.GetString("token"))
+	_ = userutil.SetJwtExpire(c.GetString("token"))
 	api.Success("success")
 }
 
@@ -86,7 +85,7 @@ func UserPasswordUpdate(c *gin.Context) {
 	}
 
 	// make jwt token expire
-	_ = userutil.SetUserJwtExpire(c.GetString("username"), time.Now().Unix())
+	_ = userutil.SetJwtExpire(c.GetString("token"))
 
 	// send safe notify email
 	userutil.PasswordChangeNotify(c.GetString("email"), time.Now())
@@ -187,6 +186,6 @@ func UserEmailUpdate(c *gin.Context) {
 
 	coder.Consume("emailChange", newEmail)
 	userutil.EmailChangeNotify(c.GetString("email"), time.Now())
-	_ = userutil.SetUserJwtExpire(c.GetString("username"), time.Now().Unix())
+	_ = userutil.SetJwtExpire(c.GetString("token"))
 	api.Success("修改成功, 请重新登录")
 }
