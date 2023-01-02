@@ -49,7 +49,7 @@ func GenerateJwt(userId int, clientIp string) (string, error) {
 	// update last login info
  	setUserLastLogin(userInfo.ID, timeNow, clientIp)
 
-	return jwt.NewWithClaims(jwt.SigningMethodHS512,JwtClaims{
+	return jwt.NewWithClaims(jwt.SigningMethodHS512, JwtClaims{
 		ID: 			  generateJti(uInfo),
 		ExpireAt:         time.Now().Add(24 * 30 * time.Hour).Unix(),
 		IssuedAt:         time.Now().Unix(),
@@ -82,7 +82,7 @@ func CheckPermission(_jwt string) (UserInfo, error) {
 // JwtDecode
 // @description check JWT token
 func JwtDecode(_jwt string) (JwtClaims, error) {
-	token, err := jwt.Parse(_jwt, func(token *jwt.Token) (interface{}, error) {
+	token, err := jwt.ParseWithClaims(_jwt, &JwtClaims{}, func(token *jwt.Token) (interface{}, error) {
 		return []byte(config.Jwt.Secret), nil
 	})
 	if err != nil {
@@ -123,7 +123,7 @@ func checkJti(jti string) error {
 		_ = _redis.Close()
 	}(_redis)
 	// get data from redis
-	_redisKey := config.RedisPrefix + ":jti:expire:" + jti
+	_redisKey := config.RedisPrefix + ":jti:expired:" + jti
 
 	expired, err := _redis.Do("EXISTS", _redisKey)
 	if err != nil {
