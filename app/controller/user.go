@@ -35,7 +35,7 @@ func UserInfo(c *gin.Context) {
 		"userId":   userId,
 		"username": c.GetString("username"),
 		"email":    c.GetString("email"),
-		"lastTime": c.GetInt("lastTime"),
+		"lastTime": c.GetInt64("lastTime"),
 	})
 }
 
