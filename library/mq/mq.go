@@ -38,12 +38,13 @@ func (q *QueueArgs) Subscribe(topic string, processes int, handler func(data str
 	for i := 0; i < processes; i++ {
 		go func() {
 			_redis := q.redis.Get()
-			defer func() {
+			defer func(_redisConn redis.Conn) {
 				// handle error
+				_ = _redisConn.Close()
 				if err := recover(); err != nil {
 					q.Subscribe(topic, 1, handler)
 				}
-			}()
+			}(_redis)
 
 			// 阻塞
 			wg := sync.WaitGroup{}
@@ -88,6 +89,9 @@ func (q *QueueArgs) Subscribe(topic string, processes int, handler func(data str
 						return
 					}
 					handler(_msg.Msg)
+
+					// prevent loop
+					time.Sleep(time.Millisecond * 500)
 				}(_msg)
 				// wait for handler
 				wg.Wait()
