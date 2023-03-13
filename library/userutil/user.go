@@ -3,17 +3,13 @@ package userutil
 import (
 	"encoding/json"
 	"errors"
-	"github.com/gomodule/redigo/redis"
 	"github.com/soxft/openid-go/app/model"
-	"github.com/soxft/openid-go/config"
 	"github.com/soxft/openid-go/library/mailutil"
 	"github.com/soxft/openid-go/library/toolutil"
 	"github.com/soxft/openid-go/process/dbutil"
 	"github.com/soxft/openid-go/process/queueutil"
-	"github.com/soxft/openid-go/process/redisutil"
 	"gorm.io/gorm"
 	"log"
-	"strconv"
 	"time"
 )
 
@@ -95,23 +91,6 @@ func CheckPassword(username, password string) (int, error) {
 		return 0, ErrPasswd
 	}
 	return account.ID, nil
-}
-
-// GetUserLast
-// @description Get user last login time and ip
-func GetUserLast(userId int) UserLastInfo {
-	// get from redis
-	_redis := redisutil.R.Get()
-	_redisKey := config.RedisPrefix + ":user:last:" + strconv.Itoa(userId)
-
-	var userLastInfo UserLastInfo
-	row, err := redis.Values(_redis.Do("HGETALL", _redisKey))
-	if err != nil {
-		return userLastInfo
-	}
-	_ = redis.ScanStruct(row, &userLastInfo)
-	_ = _redis.Close()
-	return userLastInfo
 }
 
 // CheckPasswordByUserId

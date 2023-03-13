@@ -1,7 +1,7 @@
 # openid-go
 
-the source code of https://9420.ltd backend
+The source code of https://9420.ltd backend
 
 # copyright
 
-copyright xcsoft 2022
+Copyright xcsoft 2022
