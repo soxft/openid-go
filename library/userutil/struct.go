@@ -41,4 +41,6 @@ type UserLastInfo struct {
 var (
 	ErrEmailExists    = errors.New("mailExists")
 	ErrUsernameExists = errors.New("usernameExists")
+	ErrPasswd         = errors.New("password not correct")
+	ErrDatabase       = errors.New("database error")
 )

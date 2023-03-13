@@ -19,11 +19,11 @@ import (
 
 // GenerateSalt
 // @description Generate a random salt
-func GenerateSalt() string {
-	str := toolutil.RandStr(16)
-	timestamp := time.Now().Unix()
-	return toolutil.Md5(str + strconv.FormatInt(timestamp, 10))
-}
+//func GenerateSalt() string {
+//	str := toolutil.RandStr(16)
+//	timestamp := time.Now().Unix()
+//	return toolutil.Md5(str + strconv.FormatInt(timestamp, 10))
+//}
 
 // RegisterCheck
 // @description Check users email or user if already exists
@@ -73,10 +73,12 @@ func CheckEmailExists(email string) (bool, error) {
 
 // CheckPassword
 // @description 验证用户登录
+// if return < 0  error, pwd error or server error
+// if return > 0  success, return user id
 func CheckPassword(username, password string) (int, error) {
-
 	var err error
 	var account model.Account
+
 	if toolutil.IsEmail(username) {
 		err = dbutil.D.Select("id, salt, password").Where(model.Account{Email: username}).Take(&account).Error
 	} else {
@@ -84,12 +86,13 @@ func CheckPassword(username, password string) (int, error) {
 	}
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return 0, errors.New("用户名或密码错误")
+		return 0, ErrPasswd
 	} else if err != nil {
-		return 0, errors.New("system error")
+		log.Printf("[ERROR] CheckPassword: %v", err)
+		return 0, ErrDatabase
 	}
-	if toolutil.Sha1(password+account.Salt) != account.Password {
-		return 0, errors.New("用户名或密码错误")
+	if CheckPwd(password, account.Password) != nil {
+		return 0, ErrPasswd
 	}
 	return account.ID, nil
 }
@@ -113,20 +116,21 @@ func GetUserLast(userId int) UserLastInfo {
 
 // CheckPasswordByUserId
 // @description 通过userid验证用户password
-func CheckPasswordByUserId(userId int, password string) (bool, error) {
-	// rewrite by gorm
-	var account model.Account
-	err := dbutil.D.Model(model.Account{}).Select("id, salt, password").Where(model.Account{ID: userId}).Take(&account).Error
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return false, nil
-	} else if err != nil {
-		return false, errors.New("system error")
-	}
-	if toolutil.Sha1(password+account.Salt) != account.Password {
-		return false, nil
-	}
-	return true, nil
-}
+//func CheckPasswordByUserId(userId int, password string) (bool, error) {
+//	// rewrite by gorm
+//	var account model.Account
+//
+//	if err := dbutil.D.Model(model.Account{}).Select("id, salt, password").
+//		Where(model.Account{ID: userId}).Take(&account).Error; errors.Is(err, gorm.ErrRecordNotFound) {
+//		return false, nil
+//	} else if err != nil {
+//		return false, errors.New("system error")
+//	}
+//	if CheckPwd(password, account.Password) != nil {
+//		return false, nil
+//	}
+//	return true, nil
+//}
 
 func PasswordChangeNotify(email string, timestamp time.Time) {
 	_msg, _ := json.Marshal(mailutil.Mail{

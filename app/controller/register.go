@@ -114,15 +114,19 @@ func RegisterSubmit(c *gin.Context) {
 	// 创建用户
 	userIp := c.ClientIP()
 	timestamp := time.Now().Unix()
-
-	salt := userutil.GenerateSalt()
-	pwd := toolutil.Sha1(password + salt)
+	
+	var err error
+	var pwd string
+	if pwd, err = userutil.GeneratePwd(password); err != nil {
+		log.Println(err)
+		api.Fail("pwd generate error")
+		return
+	}
 
 	// insert to Database
 	newUser := model.Account{
 		Username: username,
 		Password: pwd,
-		Salt:     salt,
 		Email:    email,
 		RegTime:  timestamp,
 		RegIp:    userIp,

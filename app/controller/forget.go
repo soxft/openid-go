@@ -92,12 +92,17 @@ func ForgetPasswordUpdate(c *gin.Context) {
 	}
 
 	// update password
-	salt := userutil.GenerateSalt()
-	passwordDb := toolutil.Sha1(newPassword + salt)
+	var err error
+	var pwdDb string
+	if pwdDb, err = userutil.GeneratePwd(newPassword); err != nil {
+		log.Println(err)
+		api.Fail("pwd generate error")
+		return
+	}
 
 	// get Username by email
 	var username string
-	err := dbutil.D.Model(model.Account{}).Where(model.Account{Email: email}).Select("username").Take(&username).Error
+	err = dbutil.D.Model(model.Account{}).Where(model.Account{Email: email}).Select("username").Take(&username).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		// 系统中不存在该邮箱
 		api.Fail("验证码错误或已过期")
@@ -108,7 +113,7 @@ func ForgetPasswordUpdate(c *gin.Context) {
 		return
 	}
 
-	err = dbutil.D.Model(model.Account{}).Where(model.Account{Email: email}).Updates(&model.Account{Password: passwordDb, Salt: salt}).Error
+	err = dbutil.D.Model(model.Account{}).Where(model.Account{Email: email}).Updates(&model.Account{Password: pwdDb}).Error
 	if err != nil {
 		log.Printf("[ERROR] UserPasswordUpdate %v", err)
 		api.Fail("system error")

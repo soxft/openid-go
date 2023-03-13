@@ -2,6 +2,7 @@ package controller
 
 import (
 	"encoding/json"
+	"errors"
 	"github.com/gin-gonic/gin"
 	"github.com/soxft/openid-go/app/model"
 	"github.com/soxft/openid-go/library/apiutil"
@@ -54,7 +55,9 @@ func UserLogout(c *gin.Context) {
 func UserPasswordUpdate(c *gin.Context) {
 	oldPassword := c.PostForm("old_password")
 	newPassword := c.PostForm("new_password")
+
 	userId := c.GetInt("userId")
+	username := c.GetString("username")
 	api := apiutil.New(c)
 
 	if !toolutil.IsPassword(newPassword) {
@@ -62,19 +65,25 @@ func UserPasswordUpdate(c *gin.Context) {
 		return
 	}
 	// verify old password
-	if right, err := userutil.CheckPasswordByUserId(userId, oldPassword); err != nil {
-		api.Fail(err.Error())
-		return
-	} else if !right {
+	if _, err := userutil.CheckPassword(username, oldPassword); errors.Is(err, userutil.ErrPasswd) {
 		api.Fail("旧密码错误")
+		return
+	} else if err != nil {
+		api.Fail("system err")
 		return
 	}
 
 	// change password
-	salt := userutil.GenerateSalt()
-	passwordDb := toolutil.Sha1(newPassword + salt)
+	var err error
+	var newPwd string
+	if newPwd, err = userutil.GeneratePwd(newPassword); err != nil {
+		log.Printf("generate password failed: %v", err)
+		api.Fail("system error")
+		return
+	}
 
-	result := dbutil.D.Model(model.Account{}).Where(&model.Account{ID: userId}).Updates(&model.Account{Password: passwordDb, Salt: salt})
+	result := dbutil.D.Model(model.Account{}).Where(&model.Account{ID: userId}).
+		Updates(&model.Account{Password: newPwd})
 
 	if result.Error != nil {
 		log.Printf("[ERROR] UserPasswordUpdate %v", result.Error)
@@ -95,12 +104,14 @@ func UserPasswordUpdate(c *gin.Context) {
 }
 
 // UserEmailUpdateCode
-// @description 发送邮箱验证码
+// @description 修改邮箱 的 发送邮箱验证码 至新邮箱
 // @router POST /user/email/update/code
 func UserEmailUpdateCode(c *gin.Context) {
 	password := c.PostForm("password")
 	newEmail := c.PostForm("new_email")
-	userId := c.GetInt("userId")
+
+	username := c.GetString("username")
+
 	api := apiutil.New(c)
 	if !toolutil.IsEmail(newEmail) {
 		api.Fail("非法的邮箱格式")
@@ -108,16 +119,16 @@ func UserEmailUpdateCode(c *gin.Context) {
 	}
 
 	// verify old password
-	if right, err := userutil.CheckPasswordByUserId(userId, password); err != nil {
-		api.Fail(err.Error())
-		return
-	} else if !right {
+	if _, err := userutil.CheckPassword(username, password); errors.Is(err, userutil.ErrPasswd) {
 		api.Fail("旧密码错误")
+		return
+	} else if err != nil {
+		api.Fail("system err")
 		return
 	}
 
 	if exist, err := userutil.CheckEmailExists(newEmail); err != nil {
-		api.Fail("system error")
+		api.Fail("system err")
 		return
 	} else if exist {
 		api.Fail("邮箱已存在")
@@ -141,7 +152,7 @@ func UserEmailUpdateCode(c *gin.Context) {
 	})
 
 	if err := coder.Save("emailChange", newEmail, verifyCode, 60*10); err != nil {
-		api.Out(false, "send code failed", gin.H{})
+		api.Fail("send code failed")
 		return
 	}
 	if err := queueutil.Q.Publish("mail", string(_msg), 0); err != nil {
