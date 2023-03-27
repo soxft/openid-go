@@ -76,9 +76,9 @@ func CheckPassword(username, password string) (int, error) {
 	var account model.Account
 
 	if toolutil.IsEmail(username) {
-		err = dbutil.D.Select("id, salt, password").Where(model.Account{Email: username}).Take(&account).Error
+		err = dbutil.D.Select("id, password").Where(model.Account{Email: username}).Take(&account).Error
 	} else {
-		err = dbutil.D.Select("id, salt, password").Where(model.Account{Username: username}).Take(&account).Error
+		err = dbutil.D.Select("id, password").Where(model.Account{Username: username}).Take(&account).Error
 	}
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
