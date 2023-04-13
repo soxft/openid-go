@@ -5,21 +5,20 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 )
 
-type User struct {
-	Username string
-	Password string
-	Salt     string
-	Email    string
-	RegTime  int64
-	RegIp    string
-	LastTime int64
-	LastIp   string
-}
-
-type UserLastInfo struct {
-	LastIp   string
-	LastTime int64
-}
+//type User struct {
+//	Username string
+//	Password string
+//	Email    string
+//	RegTime  int64
+//	RegIp    string
+//	LastTime int64
+//	LastIp   string
+//}
+//
+//type UserLastInfo struct {
+//	LastIp   string
+//	LastTime int64
+//}
 
 type JwtClaims struct {
 	ID       string `json:"jti,omitempty"`
