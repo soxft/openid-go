@@ -8,7 +8,7 @@ import (
 
 var R *redis.Pool
 
-func init() {
+func Init() {
 	r := config.Redis
 	R = &redis.Pool{
 		MaxIdle:   r.MaxIdle,

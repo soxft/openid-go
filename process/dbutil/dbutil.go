@@ -2,6 +2,7 @@ package dbutil
 
 import (
 	"fmt"
+	"github.com/soxft/openid-go/app/model"
 	"github.com/soxft/openid-go/config"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -13,7 +14,7 @@ import (
 
 var D *gorm.DB
 
-func init() {
+func Init() {
 	m := config.Mysql
 	dsn := fmt.Sprintf("%s:%s@tcp(%s)/%s?charset=%s", m.User, m.Pwd, m.Addr, m.Db, m.Charset)
 
@@ -48,4 +49,9 @@ func init() {
 		log.Fatalf("mysql connect error: %v", err)
 	}
 
+	// 自动同步表结构
+	_ = D.AutoMigrate(model.Account{})
+	_ = D.AutoMigrate(model.App{})
+	_ = D.AutoMigrate(model.OpenId{})
+	_ = D.AutoMigrate(model.UniqueId{})
 }
