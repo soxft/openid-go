@@ -24,7 +24,7 @@ func Init() {
 	}
 
 	sqlLogger := logger.New(
-		log.New(os.Stderr, "\r\n", log.LstdFlags), // io writer（日志输出的目标，前缀和日志包含的内容——译者注）
+		log.New(os.Stderr, "\r\n", log.LstdFlags),
 		logger.Config{
 			SlowThreshold:             time.Millisecond * 200, // 慢 SQL 阈值
 			LogLevel:                  logMode,                // 日志级别
