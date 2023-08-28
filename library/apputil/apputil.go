@@ -228,7 +228,21 @@ func CheckIfUserApp(appId string, userId int) (bool, error) {
 	return true, nil
 }
 
-// GenerateAppSecret
+// ReGenerateSecret
+// 重新生成新的 appSecret
+func ReGenerateSecret(appId string) (string, error) {
+	appSecret := generateAppSecret()
+	err := dbutil.D.Model(&model.App{}).
+		Where(model.App{AppId: appId}).
+		Updates(model.App{AppSecret: appSecret}).Error
+	if err != nil {
+		log.Printf("[ERROR] ReGenerateAppSecret error: %s", err)
+		return "", errors.New("server error")
+	}
+	return appSecret, nil
+}
+
+// generateAppSecret
 // 创建唯一的appSecret
 func generateAppSecret() string {
 	a := toolutil.Md5(time.Now().Format("20060102"))[:16]

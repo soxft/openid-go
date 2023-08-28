@@ -96,6 +96,35 @@ func AppDel(c *gin.Context) {
 	}
 }
 
+//TODO 将 判断是否为该用户的APP 的逻辑抽离出来 使用 middleware
+
+// AppReGenerateSecret
+// @description: 重新生成secret
+func AppReGenerateSecret(c *gin.Context) {
+	appId := c.Param("appid")
+
+	api := apiutil.New(c)
+
+	// 判断是否为 该用户的app
+	if i, err := apputil.CheckIfUserApp(appId, c.GetInt("userId")); err != nil {
+		api.Fail("system error")
+		return
+	} else if !i {
+		api.Fail("没有权限")
+		return
+	}
+
+	// re generate secret
+	if newToken, err := apputil.ReGenerateSecret(appId); err != nil {
+		log.Printf("[ERROR] ReGenerateSecret error: %s", err)
+		api.Fail("re generate secret failed, try again later")
+	} else {
+		api.SuccessWithData("re generate secret success", gin.H{
+			"secret": newToken,
+		})
+	}
+}
+
 // AppInfo
 // @description: 获取app详细信息
 // GET /app/:id
