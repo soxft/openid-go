@@ -1,7 +1,8 @@
 package mq
 
 import (
-	"github.com/gomodule/redigo/redis"
+	"context"
+	"github.com/redis/go-redis/v9"
 )
 
 type MessageQueue interface {
@@ -10,8 +11,9 @@ type MessageQueue interface {
 }
 
 type QueueArgs struct {
-	redis      *redis.Pool
+	redis      *redis.Client
 	maxRetries int
+	ctx        context.Context
 }
 
 type MsgArgs struct {

@@ -59,7 +59,7 @@ func Code(c *gin.Context) {
 		})
 		return
 	}
-	token, err := helper.GenerateToken(appId, c.GetInt("userId"))
+	token, err := helper.GenerateToken(c, appId, c.GetInt("userId"))
 	if err != nil {
 		log.Printf("[ERROR] get app info error: %s", err.Error())
 		api.Fail("system error")

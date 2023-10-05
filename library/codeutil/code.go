@@ -1,7 +1,6 @@
 package codeutil
 
 import (
-	"github.com/gomodule/redigo/redis"
 	"github.com/soxft/openid-go/config"
 	"github.com/soxft/openid-go/library/toolutil"
 	"github.com/soxft/openid-go/process/redisutil"
@@ -28,47 +27,37 @@ func (c VerifyCode) Create(length int) string {
 
 // Save
 // @description: save verify code 存储验证码
-func (c VerifyCode) Save(topic string, email string, code string, timeout int64) error {
-	_redis := redisutil.R.Get()
-	defer func(_redis redis.Conn) {
-		_ = _redis.Close()
-	}(_redis)
+// timeout: expire time (second)
+func (c VerifyCode) Save(topic string, email string, code string, timeout time.Duration) error {
+	_redis := redisutil.R
 
 	redisKey := config.RedisPrefix + ":code:" + topic + ":" + toolutil.Md5(email)
-	if _, err := _redis.Do("SETEX", redisKey, timeout, toolutil.Md5(code)); err != nil {
-		return err
-	}
-	return nil
+
+	return _redis.SetEx(c.ctx, redisKey, toolutil.Md5(code), timeout).Err()
 }
 
 // Check
 // @description: 判断验证码是否正确
 func (c VerifyCode) Check(topic string, email string, code string) (bool, error) {
-	_redis := redisutil.R.Get()
-	defer func(_redis redis.Conn) {
-		_ = _redis.Close()
-	}(_redis)
+	_redis := redisutil.R
 
 	redisKey := config.RedisPrefix + ":code:" + topic + ":" + toolutil.Md5(email)
-	if realCode, err := redis.String(_redis.Do("GET", redisKey)); err != nil {
+	if realCode, err := _redis.Get(c.ctx, redisKey).Result(); err != nil {
 		return false, err
-	} else {
-		if realCode == toolutil.Md5(code) {
-			// delete key
-			return true, nil
-		}
+	} else if realCode == toolutil.Md5(code) {
+		// delete key
+		return true, nil
 	}
+
 	return false, nil
 }
 
 // Consume
 // @description: 消费(删除)验证码
 func (c VerifyCode) Consume(topic string, email string) {
-	_redis := redisutil.R.Get()
-	defer func(_redis redis.Conn) {
-		_ = _redis.Close()
-	}(_redis)
+	_redis := redisutil.R
 
 	redisKey := config.RedisPrefix + ":code:" + topic + ":" + toolutil.Md5(email)
-	_, _ = _redis.Do("DEL", redisKey)
+
+	_redis.Del(c.ctx, redisKey)
 }

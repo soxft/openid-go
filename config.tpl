@@ -12,6 +12,7 @@ Redis:
   Prefix: openid
   MaxIdle: 50
   MaxActive: 500
+  MaxRetries: 3
 Mysql:
   Address: 127.0.0.1:3306
   Username: openid

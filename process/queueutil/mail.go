@@ -23,9 +23,9 @@ func Mail(msg string) {
 	var platform mailutil.MailPlatform
 	switch mailMsg.Typ {
 	case "register":
-		platform = mailutil.MailplatformAliyun
+		platform = mailutil.MailPlatformAliyun
 	default:
-		platform = mailutil.MailplatformAliyun
+		platform = mailutil.MailPlatformAliyun
 	}
 	// send mail
 	if err := mailutil.Send(mailMsg, platform); err != nil {

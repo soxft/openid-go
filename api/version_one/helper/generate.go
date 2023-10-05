@@ -1,8 +1,8 @@
 package helper
 
 import (
+	"context"
 	"errors"
-	"github.com/gomodule/redigo/redis"
 	"github.com/soxft/openid-go/app/model"
 	"github.com/soxft/openid-go/library/toolutil"
 	"github.com/soxft/openid-go/process/dbutil"
@@ -16,12 +16,9 @@ import (
 
 // GenerateToken
 // @description: v1 获取token (用于跳转redirect_uri携带)
-func GenerateToken(appId string, userId int) (string, error) {
+func GenerateToken(ctx context.Context, appId string, userId int) (string, error) {
 	// check if exists in redis
-	_redis := redisutil.R.Get()
-	defer func() {
-		_ = _redis.Close()
-	}()
+	_redis := redisutil.R
 
 	a := toolutil.RandStr(10)
 	b := toolutil.Md5(time.Now().Format("15:04:05"))[:10]
@@ -32,19 +29,19 @@ func GenerateToken(appId string, userId int) (string, error) {
 
 	_redisKey := getTokenRedisKey(appId, token)
 
-	if exists, err := redis.Bool(_redis.Do("EXISTS", _redisKey)); err != nil {
+	if exists, err := _redis.Exists(ctx, _redisKey).Result(); err != nil {
 		log.Printf("[error] redis.Bool: %s", err.Error())
 		return "", errors.New("system error")
-	} else if !exists {
+	} else if exists == 0 {
 		// 不存在 则存入redis 并返回
-		if _, err := _redis.Do("SETEX", _redisKey, 60*3, userId); err != nil {
+		if _, err := _redis.SetEx(ctx, _redisKey, userId, 3*time.Minute).Result(); err != nil {
 			log.Printf("[ERROR] GetToken error: %s", err)
 			return "", errors.New("server error")
 		}
 		return token, nil
 	}
 	// 存在
-	return GenerateToken(appId, userId)
+	return GenerateToken(ctx, appId, userId)
 }
 
 // generateOpenId

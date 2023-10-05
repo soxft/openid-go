@@ -3,12 +3,13 @@ package webutil
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/soxft/openid-go/config"
-	"github.com/soxft/openid-go/process/queueutil"
 	"log"
 	"os"
 )
 
 func Init() {
+	log.Printf("[INFO] Web initailizing...")
+
 	log.SetOutput(os.Stdout)
 
 	// if debug
@@ -16,8 +17,6 @@ func Init() {
 		gin.SetMode(gin.ReleaseMode)
 	}
 
-	// init queue
-	queueutil.Init()
 	// init gin
 	r := gin.New()
 	initRoute(r)

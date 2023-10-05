@@ -10,5 +10,5 @@ type Mail struct {
 type MailPlatform string
 
 const (
-	MailplatformAliyun MailPlatform = "aliyun"
+	MailPlatformAliyun MailPlatform = "aliyun"
 )

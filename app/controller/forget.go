@@ -122,7 +122,7 @@ func ForgetPasswordUpdate(c *gin.Context) {
 	coder.Consume("forgetPwd", email)
 
 	// 修改密码后续安全操作
-	_ = userutil.SetJwtExpire(c.GetString("token"))
+	_ = userutil.SetJwtExpire(c, c.GetString("token"))
 	userutil.PasswordChangeNotify(email, time.Now())
 
 	api.Success("修改成功!")

@@ -13,7 +13,9 @@ import (
 
 var D *gorm.DB
 
-func init() {
+func Init() {
+	log.Printf("[INFO] Mysql trying connect to tcp://%s/%s", config.Mysql.Addr, config.Mysql.Db)
+
 	m := config.Mysql
 	dsn := fmt.Sprintf("%s:%s@tcp(%s)/%s?charset=%s", m.User, m.Pwd, m.Addr, m.Db, m.Charset)
 
@@ -48,4 +50,5 @@ func init() {
 		log.Fatalf("mysql connect error: %v", err)
 	}
 
+	log.Printf("[INFO] Mysql connect success")
 }

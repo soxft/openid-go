@@ -17,12 +17,13 @@ type ServerConfig struct {
 }
 
 type RedisConfig struct {
-	Addr      string `yaml:"Address"`
-	Pwd       string `yaml:"Password"`
-	Db        int    `yaml:"Database"`
-	Prefix    string `yaml:"Prefix"`
-	MaxIdle   int    `yaml:"MaxIdle"`
-	MaxActive int    `yaml:"MaxActive"`
+	Addr       string `yaml:"Address"`
+	Pwd        string `yaml:"Password"`
+	Db         int    `yaml:"Database"`
+	Prefix     string `yaml:"Prefix"`
+	MaxIdle    int    `yaml:"MaxIdle"`
+	MaxActive  int    `yaml:"MaxActive"`
+	MaxRetries int    `yaml:"MaxRetries"`
 }
 
 type MysqlConfig struct {
