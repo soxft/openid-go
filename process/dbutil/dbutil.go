@@ -14,9 +14,9 @@ import (
 var D *gorm.DB
 
 func Init() {
-	log.Printf("[INFO] Mysql trying connect to tcp://%s/%s", config.Mysql.Addr, config.Mysql.Db)
-
 	m := config.Mysql
+	log.Printf("[INFO] Mysql trying connect to tcp://%s:%s/%s", m.User, m.Addr, m.Db)
+
 	dsn := fmt.Sprintf("%s:%s@tcp(%s)/%s?charset=%s", m.User, m.Pwd, m.Addr, m.Db, m.Charset)
 
 	var logMode = logger.Warn
