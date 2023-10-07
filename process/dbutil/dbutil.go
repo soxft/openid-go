@@ -2,6 +2,7 @@ package dbutil
 
 import (
 	"fmt"
+	"github.com/soxft/openid-go/app/model"
 	"github.com/soxft/openid-go/config"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -48,6 +49,10 @@ func Init() {
 	sqlDb.SetConnMaxLifetime(time.Duration(m.MaxLifetime) * time.Second)
 	if err := sqlDb.Ping(); err != nil {
 		log.Fatalf("mysql connect error: %v", err)
+	}
+
+	if err := D.AutoMigrate(model.Account{}, model.App{}, model.OpenId{}, model.UniqueId{}); err != nil {
+		log.Fatalf("mysql migrate error: %v", err)
 	}
 
 	log.Printf("[INFO] Mysql connect success")
