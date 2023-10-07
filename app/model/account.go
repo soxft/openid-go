@@ -1,10 +1,10 @@
 package model
 
 type Account struct {
-	ID       int
-	Username string
+	ID       int    `gorm:"primaryKey;autoIncrement"`
+	Username string `gorm:"uniqueIndex"`
 	Password string
-	Email    string
+	Email    string `gorm:"uniqueIndex"`
 	RegTime  int64
 	RegIp    string
 	LastTime int64

@@ -1,11 +1,11 @@
 package model
 
 type OpenId struct {
-	ID       int
-	UserId   int
-	AppId    string
-	OpenId   string
-	CreateAt int64 `gorm:"autoCreateTime"`
+	ID       int    `gorm:"primaryKey;autoIncrement"`
+	UserId   int    `gorm:"index"`
+	AppId    string `gorm:"index"`
+	OpenId   string `gorm:"uniqueIndex"`
+	CreateAt int64  `gorm:"autoCreateTime"`
 }
 
 func (OpenId) TableName() string {
