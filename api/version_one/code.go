@@ -1,6 +1,7 @@
 package version_one
 
 import (
+	"errors"
 	"github.com/gin-gonic/gin"
 	"github.com/soxft/openid-go/api/version_one/helper"
 	"github.com/soxft/openid-go/library/apiutil"
@@ -36,7 +37,7 @@ func Code(c *gin.Context) {
 	// get app Info
 	var appInfo apputil.AppFullInfoStruct
 	if appInfo, err = apputil.GetAppInfo(appId); err != nil {
-		if err == apputil.ErrAppNotExist {
+		if errors.Is(err, apputil.ErrAppNotExist) {
 			api.Fail("app not exist")
 			return
 		}

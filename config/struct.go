@@ -9,11 +9,12 @@ type Config struct {
 	DeveloperConfig `yaml:"Developer"`
 }
 type ServerConfig struct {
-	Addr  string `yaml:"Address"`
-	Debug bool   `yaml:"Debug"`
-	Log   bool   `yaml:"Log"`
-	Title string `yaml:"Title"`
-	Name  string `yaml:"ServerName"`
+	Addr     string `yaml:"Address"`
+	Debug    bool   `yaml:"Debug"`
+	Log      bool   `yaml:"Log"`
+	Title    string `yaml:"Title"`
+	Name     string `yaml:"ServerName"`
+	FrontUrl string `yaml:"FrontUrl"`
 }
 
 type RedisConfig struct {

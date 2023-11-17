@@ -4,7 +4,7 @@ Server:
   Log: true
   Title: "X openID"
   ServerName: "X openID"
-  Url: http://127.0.0.1:8080
+  FrontUrl: http://127.0.0.1:8080
 Redis:
   Address: "127.0.0.1:6379"
   Password:
