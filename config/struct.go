@@ -4,6 +4,7 @@ type Config struct {
 	ServerConfig    `yaml:"Server"`
 	RedisConfig     `yaml:"Redis"`
 	MysqlConfig     `yaml:"Mysql"`
+	SmtpConfig      `yaml:"Smtp"`
 	AliyunConfig    `yaml:"Aliyun"`
 	JwtConfig       `yaml:"Jwt"`
 	DeveloperConfig `yaml:"Developer"`
@@ -39,7 +40,18 @@ type MysqlConfig struct {
 	MaxLifetime int    `yaml:"MaxLifetime"`
 }
 
+type SmtpConfig struct {
+	Host   string `yaml:"Host"`
+	Port   int    `yaml:"Port"`
+	Secure bool   `yaml:"Secure"`
+	User   string `yaml:"Username"`
+	Pwd    string `yaml:"Password"`
+}
+
 type AliyunConfig struct {
+	Domain       string `yaml:"Domain"`
+	Region       string `yaml:"Region"`
+	Version      string `yaml:"Version"`
 	AccessKey    string `yaml:"AccessKey"`
 	AccessSecret string `yaml:"AccessSecret"`
 	Email        string `yaml:"Email"`
