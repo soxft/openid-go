@@ -76,20 +76,16 @@ func CreateApp(userId int, appName string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	appSecret := generateAppSecret()
-	result := dbutil.D.Create(&model.App{
+
+	if result := dbutil.D.Create(&model.App{
 		UserId:     userId,
 		AppId:      appId,
 		AppName:    appName,
-		AppSecret:  appSecret,
+		AppSecret:  generateAppSecret(),
 		AppGateway: "",
-	})
-	if result.Error != nil {
-		log.Printf("[apputil] create app failed: %s", err.Error())
-		return false, errors.New("server error")
-	} else if result.RowsAffected == 0 {
-		log.Printf("[apputil] create app failed: %s", err.Error())
-		return false, errors.New("server error")
+	}); result.Error != nil || result.RowsAffected == 0 {
+		log.Printf("[apputil] create app failed: %s", result.Error.Error())
+		return false, errors.New("创建应用时发生错误, 请稍后再试")
 	}
 
 	return true, nil
@@ -217,8 +213,13 @@ func generateAppId() (string, error) {
 func CheckIfUserApp(appId string, userId int) (bool, error) {
 	var appUserId int
 	err := dbutil.D.Model(&model.App{}).Select("user_id").Where(model.App{AppId: appId}).Take(&appUserId).Error
-	if err != nil {
+	if errors.Is(err, gorm.ErrRecordNotFound) {
 		log.Printf("[ERROR] CheckIfUserApp error: %s", err)
+
+		return false, errors.New("app not exist")
+	} else if err != nil {
+		log.Printf("[ERROR] CheckIfUserApp error: %s", err)
+
 		return false, errors.New("server error")
 	}
 

@@ -150,7 +150,7 @@ func UserEmailUpdateCode(c *gin.Context) {
 		Typ:       "emailChange",
 	})
 
-	if err := coder.Save("emailChange", newEmail, verifyCode, 60*10); err != nil {
+	if err := coder.Save("emailChange", newEmail, verifyCode, 60*time.Minute); err != nil {
 		api.Fail("send code failed")
 		return
 	}

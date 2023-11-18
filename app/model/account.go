@@ -1,7 +1,7 @@
 package model
 
 type Account struct {
-	ID       int    `gorm:"primaryKey;autoIncrement"`
+	ID       int    `gorm:"autoIncrement;primaryKey"`
 	Username string `gorm:"type:varchar(20);uniqueIndex;not null"`
 	Password string `gorm:"type:varchar(128);not null"`
 	Email    string `gorm:"type:varchar(128);uniqueIndex"`

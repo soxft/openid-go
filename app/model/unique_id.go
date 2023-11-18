@@ -1,9 +1,9 @@
 package model
 
 type UniqueId struct {
-	ID        int    `gorm:"type:bigint(20);primaryKey;autoIncrement"`
-	UserId    int    `gorm:"type:bigint(20);index"`
-	DevUserId int    `gorm:"type:bigint(20);index"`
+	ID        int    `gorm:"autoIncrement;primaryKey"`
+	UserId    int    `gorm:"index"`
+	DevUserId int    `gorm:"index"`
 	UniqueId  string `gorm:"type:varchar(128);uniqueIndex"`
 	CreateAt  int64  `gorm:"autoCreateTime"`
 }

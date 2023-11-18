@@ -63,7 +63,7 @@ func RegisterCode(c *gin.Context) {
 		Typ:       "register",
 	})
 
-	if err := coder.Save("register", email, verifyCode, 60*10); err != nil {
+	if err := coder.Save("register", email, verifyCode, 60*time.Minute); err != nil {
 		go mailutil.DeleteBeacon(c, email) // 删除信标
 
 		api.Fail("send code failed")

@@ -51,7 +51,7 @@ func ForgetPasswordCode(c *gin.Context) {
 		Typ:       "forgetPwd",
 	})
 
-	if err := coder.Save("forgetPwd", email, verifyCode, 60*10); err != nil {
+	if err := coder.Save("forgetPwd", email, verifyCode, 60*time.Minute); err != nil {
 		api.Out(false, "send code failed", gin.H{})
 		return
 	}

@@ -80,10 +80,12 @@ func AppDel(c *gin.Context) {
 
 	// 判断是否为 该用户的app
 	if i, err := apputil.CheckIfUserApp(appId, c.GetInt("userId")); err != nil {
-		api.Fail("system error")
+		api.Fail(err.Error())
+
 		return
 	} else if !i {
 		api.Fail("没有权限")
+
 		return
 	}
 
@@ -135,7 +137,8 @@ func AppInfo(c *gin.Context) {
 
 	// 判断是否为 该用户的app
 	if i, err := apputil.CheckIfUserApp(appId, c.GetInt("userId")); err != nil {
-		api.Fail("system error")
+		api.Fail(err.Error())
+
 		return
 	} else if !i {
 		api.Fail("没有权限")
