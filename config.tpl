@@ -23,10 +23,19 @@ Mysql:
   MaxOpen: 200
   MaxIdle: 100
   MaxLifetime: 240
-Aliyun:
-  AccessKey: "aliyun_access_key"
-  AccessSecret: "aliyun_access_secret"
-  Email: "aliyun_email"
+Aliyun: # Aliyun 邮件推送
+  Domain: dm.aliyuncs.com
+  Region: cn-hangzhou
+  Version: 2015-11-23
+  AccessKey: AccessKey
+  AccessSecret: AccessSecret
+  Email: no-reply@mail.example.com
+Smtp: # SMTP配置
+  Host: smtp.example.com
+  Port: 465
+  Secure: true
+  Username: username
+  Password: password
 Jwt:
   Secret: "jwt_secret"
 Developer:
