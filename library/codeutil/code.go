@@ -1,6 +1,7 @@
 package codeutil
 
 import (
+	"context"
 	"github.com/soxft/openid-go/config"
 	"github.com/soxft/openid-go/library/toolutil"
 	"github.com/soxft/openid-go/process/redisutil"
@@ -9,8 +10,10 @@ import (
 	"time"
 )
 
-func New() *VerifyCode {
-	return &VerifyCode{}
+func New(ctx context.Context) *VerifyCode {
+	return &VerifyCode{
+		ctx: ctx,
+	}
 }
 
 // Create
@@ -29,7 +32,7 @@ func (c VerifyCode) Create(length int) string {
 // @description: save verify code 存储验证码
 // timeout: expire time (second)
 func (c VerifyCode) Save(topic string, email string, code string, timeout time.Duration) error {
-	_redis := redisutil.R
+	_redis := redisutil.RDB
 
 	redisKey := config.RedisPrefix + ":code:" + topic + ":" + toolutil.Md5(email)
 
@@ -39,7 +42,7 @@ func (c VerifyCode) Save(topic string, email string, code string, timeout time.D
 // Check
 // @description: 判断验证码是否正确
 func (c VerifyCode) Check(topic string, email string, code string) (bool, error) {
-	_redis := redisutil.R
+	_redis := redisutil.RDB
 
 	redisKey := config.RedisPrefix + ":code:" + topic + ":" + toolutil.Md5(email)
 	if realCode, err := _redis.Get(c.ctx, redisKey).Result(); err != nil {
@@ -55,7 +58,7 @@ func (c VerifyCode) Check(topic string, email string, code string) (bool, error)
 // Consume
 // @description: 消费(删除)验证码
 func (c VerifyCode) Consume(topic string, email string) {
-	_redis := redisutil.R
+	_redis := redisutil.RDB
 
 	redisKey := config.RedisPrefix + ":code:" + topic + ":" + toolutil.Md5(email)
 

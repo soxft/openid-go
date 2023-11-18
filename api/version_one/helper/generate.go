@@ -18,7 +18,7 @@ import (
 // @description: v1 获取token (用于跳转redirect_uri携带)
 func GenerateToken(ctx context.Context, appId string, userId int) (string, error) {
 	// check if exists in redis
-	_redis := redisutil.R
+	_redis := redisutil.RDB
 
 	a := toolutil.RandStr(10)
 	b := toolutil.Md5(time.Now().Format("15:04:05"))[:10]

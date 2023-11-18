@@ -99,7 +99,7 @@ func JwtDecode(_jwt string) (JwtClaims, error) {
 // @description 标记JWT过期
 func SetJwtExpire(c context.Context, _jwt string) error {
 	JwtClaims, _ := JwtDecode(_jwt)
-	_redis := redisutil.R
+	_redis := redisutil.RDB
 
 	ttl := JwtClaims.ExpireAt - time.Now().Unix()
 
@@ -114,7 +114,7 @@ func SetJwtExpire(c context.Context, _jwt string) error {
 
 // checkJti
 func checkJti(ctx context.Context, jti string) error {
-	_redis := redisutil.R
+	_redis := redisutil.RDB
 
 	expired, err := _redis.Exists(ctx, getJwtExpiredKey(jti)).Result()
 	if err != nil {

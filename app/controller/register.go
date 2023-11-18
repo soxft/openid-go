@@ -34,18 +34,27 @@ func RegisterCode(c *gin.Context) {
 		api.Fail("code send too frequently")
 		return
 	}
+
+	// 先创建 beacon 再说
+	_ = mailutil.CreateBeacon(c, email, 120)
+
 	// check mail exists
 	if exists, err := userutil.CheckEmailExists(email); err != nil {
+		go mailutil.DeleteBeacon(c, email) // 删除信标
+
 		api.Fail("server error")
 		return
 	} else if exists {
+		go mailutil.DeleteBeacon(c, email) // 删除信标
+
 		api.Fail("email already exists")
 		return
 	}
 
 	// send Code
-	coder := codeutil.New()
+	coder := codeutil.New(c)
 	verifyCode := coder.Create(4)
+
 	_msg, _ := json.Marshal(mailutil.Mail{
 		ToAddress: email,
 		Subject:   verifyCode + " 为您的验证码",
@@ -54,15 +63,19 @@ func RegisterCode(c *gin.Context) {
 	})
 
 	if err := coder.Save("register", email, verifyCode, 60*10); err != nil {
-		api.Out(false, "send code failed", gin.H{})
-		return
-	}
-	if err := queueutil.Q.Publish("mail", string(_msg), 0); err != nil {
-		coder.Consume("register", email) // 删除code
+		go mailutil.DeleteBeacon(c, email) // 删除信标
+
 		api.Fail("send code failed")
 		return
 	}
-	_ = mailutil.CreateBeacon(c, email, 120)
+
+	if err := queueutil.Q.Publish("mail", string(_msg), 0); err != nil {
+		go coder.Consume("register", email) // 删除code
+		go mailutil.DeleteBeacon(c, email)  // 删除信标
+
+		api.Fail("send code failed")
+		return
+	}
 
 	api.Success("code send success")
 }
@@ -92,7 +105,7 @@ func RegisterSubmit(c *gin.Context) {
 	}
 
 	// 验证码检测
-	coder := codeutil.New()
+	coder := codeutil.New(c)
 	if pass, err := coder.Check("register", email, verifyCode); !pass || err != nil {
 		api.Fail("invalid code")
 		return
@@ -114,7 +127,7 @@ func RegisterSubmit(c *gin.Context) {
 	// 创建用户
 	userIp := c.ClientIP()
 	timestamp := time.Now().Unix()
-	
+
 	var err error
 	var pwd string
 	if pwd, err = userutil.GeneratePwd(password); err != nil {

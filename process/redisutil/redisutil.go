@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-var R *redis.Client
+var RDB *redis.Client
 
 func Init() {
 	log.Printf("[INFO] Redis trying connect to tcp://%s/%d", config.Redis.Addr, config.Redis.Db)
@@ -26,11 +26,13 @@ func Init() {
 		MaxActiveConns:  r.MaxActive,
 	})
 
-	if err := rdb.Ping(context.Background()).Err(); err != nil {
-		log.Fatalf("[ERROR] Redis connect error: %s", err)
+	RDB = rdb
+
+	// test redis
+	pong, err := rdb.Ping(context.Background()).Result()
+	if err != nil {
+		log.Fatalf("[ERROR] Redis ping failed: %v", err)
 	}
 
-	R = rdb
-
-	log.Printf("[INFO] Redis connect success")
+	log.Printf("[INFO] Redis init success, pong: %s ", pong)
 }

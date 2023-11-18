@@ -17,7 +17,7 @@ import (
 // GetUserIdByToken
 // 通过Token和appid 获取用户ID
 func GetUserIdByToken(ctx context.Context, appId string, token string) (int, error) {
-	_redis := redisutil.R
+	_redis := redisutil.RDB
 
 	userId, err := _redis.Get(ctx, getTokenRedisKey(appId, token)).Int()
 	if err != nil {
@@ -55,7 +55,7 @@ func GetUserIds(appId string, userId int) (UserIdsStruct, error) {
 }
 
 func DeleteToken(ctx context.Context, appId string, token string) error {
-	_redis := redisutil.R
+	_redis := redisutil.RDB
 
 	if err := _redis.Del(ctx, getTokenRedisKey(appId, token)).Err(); err != nil {
 		log.Printf("[ERROR] DeleteToken error: %s", err)

@@ -15,7 +15,7 @@ func Init() {
 	log.Printf("[INFO] Queue initailizing...")
 
 	// do nothing
-	Q = mq.New(context.Background(), redisutil.R, 3)
+	Q = mq.New(context.Background(), redisutil.RDB, 3)
 
 	Q.Subscribe("mail", 2, Mail)
 

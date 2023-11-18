@@ -141,7 +141,7 @@ func UserEmailUpdateCode(c *gin.Context) {
 	}
 
 	// send mail
-	coder := codeutil.New()
+	coder := codeutil.New(c)
 	verifyCode := coder.Create(4)
 	_msg, _ := json.Marshal(mailutil.Mail{
 		ToAddress: newEmail,
@@ -177,7 +177,7 @@ func UserEmailUpdate(c *gin.Context) {
 	}
 
 	// verify code
-	coder := codeutil.New()
+	coder := codeutil.New(c)
 	if pass, err := coder.Check("emailChange", newEmail, code); !pass || err != nil {
 		api.Fail("验证码错误或已过期")
 		return

@@ -42,7 +42,7 @@ func ForgetPasswordCode(c *gin.Context) {
 	}
 
 	// send mail
-	coder := codeutil.New()
+	coder := codeutil.New(c)
 	verifyCode := coder.Create(6)
 	_msg, _ := json.Marshal(mailutil.Mail{
 		ToAddress: email,
@@ -85,7 +85,7 @@ func ForgetPasswordUpdate(c *gin.Context) {
 	}
 
 	// verify code
-	coder := codeutil.New()
+	coder := codeutil.New(c)
 	if pass, err := coder.Check("forgetPwd", email, code); !pass || err != nil {
 		api.Fail("验证码错误或已过期")
 		return
