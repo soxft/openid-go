@@ -21,7 +21,7 @@ func Init() {
 	r := gin.New()
 	initRoute(r)
 
-	log.Printf("Server running at %s ", config.Server.Addr)
+	log.Printf("[INFO] Web initailizing success, running at %s ", config.Server.Addr)
 	if err := r.Run(config.Server.Addr); err != nil {
 		log.Panic(err)
 	}
