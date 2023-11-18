@@ -1,7 +1,9 @@
 package version_one
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/soxft/openid-go/config"
 	"github.com/soxft/openid-go/library/apiutil"
 	"net/url"
 )
@@ -17,5 +19,6 @@ func Login(c *gin.Context) {
 		api.Fail("Invalid params")
 		return
 	}
-	c.Redirect(302, "/v1/"+appid+"?redirect_uri="+url.QueryEscape(redirectUri))
+
+	c.Redirect(302, fmt.Sprintf("%s/v1/%s?redirect_uri=%s", config.Server.FrontUrl, appid, url.QueryEscape(redirectUri)))
 }

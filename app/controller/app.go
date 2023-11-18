@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"errors"
 	"github.com/gin-gonic/gin"
 	"github.com/soxft/openid-go/app/model"
 	"github.com/soxft/openid-go/library/apiutil"
@@ -38,17 +39,26 @@ func AppEdit(c *gin.Context) {
 	appName := c.PostForm("app_name")
 	appGateway := c.PostForm("app_gateway")
 
-	appGateway = strings.TrimSpace(appGateway)
 	api := apiutil.New(c)
-
 	// 参数合法性检测
 	if !apputil.CheckName(appName) {
 		api.Fail("应用名称不合法")
 		return
 	}
-	if !apputil.CheckGateway(appGateway) {
-		api.Fail("应用网关不合法")
-		return
+
+	// 检测网关是否合法
+	var gateways []string
+
+	for _, gateway := range strings.Split(appGateway, "\n") {
+		gateway = strings.TrimSpace(gateway)
+		if gateway == "" {
+			continue
+		}
+		if !apputil.CheckGateway(gateway) {
+			apiutil.New(c).Fail("网关不合法")
+			return
+		}
+		gateways = append(gateways, gateway)
 	}
 
 	// 判断是否为 该用户的app
@@ -60,8 +70,15 @@ func AppEdit(c *gin.Context) {
 		return
 	}
 
-	// do change
-	err := dbutil.D.Model(model.App{}).Where(model.App{AppId: appId}).Updates(model.App{AppName: appName, AppGateway: appGateway}).Error
+	// Do Update
+	err := dbutil.D.Model(model.App{}).
+		Where(model.App{
+			AppId: appId,
+		}).
+		Updates(model.App{
+			AppName:    appName,
+			AppGateway: strings.Join(gateways, ","),
+		}).Error
 	if err != nil {
 		log.Printf("[ERROR] db.Exec err: %v", err)
 		api.Fail("system error")
@@ -79,10 +96,12 @@ func AppDel(c *gin.Context) {
 
 	// 判断是否为 该用户的app
 	if i, err := apputil.CheckIfUserApp(appId, c.GetInt("userId")); err != nil {
-		api.Fail("system error")
+		api.Fail(err.Error())
+
 		return
 	} else if !i {
 		api.Fail("没有权限")
+
 		return
 	}
 
@@ -96,11 +115,13 @@ func AppDel(c *gin.Context) {
 	}
 }
 
-// AppInfo
-// @description: 获取app详细信息
-// GET /app/:id
-func AppInfo(c *gin.Context) {
+//TODO 将 判断是否为该用户的APP 的逻辑抽离出来 使用 middleware
+
+// AppReGenerateSecret
+// @description: 重新生成secret
+func AppReGenerateSecret(c *gin.Context) {
 	appId := c.Param("appid")
+
 	api := apiutil.New(c)
 
 	// 判断是否为 该用户的app
@@ -112,15 +133,44 @@ func AppInfo(c *gin.Context) {
 		return
 	}
 
+	// re generate secret
+	if newToken, err := apputil.ReGenerateSecret(appId); err != nil {
+		log.Printf("[ERROR] ReGenerateSecret error: %s", err)
+		api.Fail("re generate secret failed, try again later")
+	} else {
+		api.SuccessWithData("re generate secret success", gin.H{
+			"secret": newToken,
+		})
+	}
+}
+
+// AppInfo
+// @description: 获取app详细信息
+// GET /app/:id
+func AppInfo(c *gin.Context) {
+	appId := c.Param("appid")
+	api := apiutil.New(c)
+
+	// 判断是否为 该用户的app
+	if i, err := apputil.CheckIfUserApp(appId, c.GetInt("userId")); err != nil {
+		api.Fail(err.Error())
+
+		return
+	} else if !i {
+		api.Fail("没有权限")
+		return
+	}
+
 	// get app info
 	if appInfo, err := apputil.GetAppInfo(appId); err != nil {
-		if err == apputil.ErrAppNotExist {
+		if errors.Is(err, apputil.ErrAppNotExist) {
 			api.Fail("应用不存在")
 			return
 		}
 		api.Fail("system error")
 		return
 	} else {
+		appInfo.AppGateway = strings.ReplaceAll(appInfo.AppGateway, ",", "\n")
 		api.SuccessWithData("success", appInfo)
 	}
 }

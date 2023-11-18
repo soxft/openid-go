@@ -42,7 +42,7 @@ func ForgetPasswordCode(c *gin.Context) {
 	}
 
 	// send mail
-	coder := codeutil.New()
+	coder := codeutil.New(c)
 	verifyCode := coder.Create(6)
 	_msg, _ := json.Marshal(mailutil.Mail{
 		ToAddress: email,
@@ -51,7 +51,7 @@ func ForgetPasswordCode(c *gin.Context) {
 		Typ:       "forgetPwd",
 	})
 
-	if err := coder.Save("forgetPwd", email, verifyCode, 60*10); err != nil {
+	if err := coder.Save("forgetPwd", email, verifyCode, 60*time.Minute); err != nil {
 		api.Out(false, "send code failed", gin.H{})
 		return
 	}
@@ -85,7 +85,7 @@ func ForgetPasswordUpdate(c *gin.Context) {
 	}
 
 	// verify code
-	coder := codeutil.New()
+	coder := codeutil.New(c)
 	if pass, err := coder.Check("forgetPwd", email, code); !pass || err != nil {
 		api.Fail("验证码错误或已过期")
 		return
@@ -122,7 +122,7 @@ func ForgetPasswordUpdate(c *gin.Context) {
 	coder.Consume("forgetPwd", email)
 
 	// 修改密码后续安全操作
-	_ = userutil.SetJwtExpire(c.GetString("token"))
+	_ = userutil.SetJwtExpire(c, c.GetString("token"))
 	userutil.PasswordChangeNotify(email, time.Now())
 
 	api.Success("修改成功!")

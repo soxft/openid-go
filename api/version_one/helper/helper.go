@@ -1,8 +1,9 @@
 package helper
 
 import (
+	"context"
 	"errors"
-	"github.com/gomodule/redigo/redis"
+	"github.com/redis/go-redis/v9"
 	"github.com/soxft/openid-go/app/model"
 	"github.com/soxft/openid-go/config"
 	"github.com/soxft/openid-go/library/apputil"
@@ -15,20 +16,19 @@ import (
 
 // GetUserIdByToken
 // 通过Token和appid 获取用户ID
-func GetUserIdByToken(appId string, token string) (int, error) {
-	_redis := redisutil.R.Get()
-	defer func() {
-		_ = _redis.Close()
-	}()
+func GetUserIdByToken(ctx context.Context, appId string, token string) (int, error) {
+	_redis := redisutil.RDB
 
-	userId, err := redis.Int(_redis.Do("GET", getTokenRedisKey(appId, token)))
+	userId, err := _redis.Get(ctx, getTokenRedisKey(appId, token)).Int()
 	if err != nil {
-		if err == redis.ErrNil {
+		if errors.Is(err, redis.Nil) {
 			return 0, ErrTokenNotExists
 		}
+
 		log.Printf("[ERROR] GetUserIdByToken error: %s", err)
 		return 0, errors.New("server error")
 	}
+
 	return userId, nil
 }
 
@@ -54,14 +54,10 @@ func GetUserIds(appId string, userId int) (UserIdsStruct, error) {
 	}, nil
 }
 
-func DeleteToken(appId string, token string) error {
-	_redis := redisutil.R.Get()
-	defer func() {
-		_ = _redis.Close()
-	}()
+func DeleteToken(ctx context.Context, appId string, token string) error {
+	_redis := redisutil.RDB
 
-	_, err := _redis.Do("DEL", getTokenRedisKey(appId, token))
-	if err != nil {
+	if err := _redis.Del(ctx, getTokenRedisKey(appId, token)).Err(); err != nil {
 		log.Printf("[ERROR] DeleteToken error: %s", err)
 		return errors.New("server error")
 	}

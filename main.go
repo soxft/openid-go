@@ -1,7 +1,7 @@
 package main
 
-import "github.com/soxft/openid-go/process/webutil"
+import "github.com/soxft/openid-go/core"
 
 func main() {
-	webutil.Init()
+	core.Init()
 }

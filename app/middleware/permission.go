@@ -16,7 +16,7 @@ func AuthPermission() gin.HandlerFunc {
 			api.Abort401("Unauthorized", 0)
 			return
 		}
-		if userInfo, err := userutil.CheckPermission(token); err != nil {
+		if userInfo, err := userutil.CheckPermission(c, token); err != nil {
 			api.Abort401("Unauthorized", 1)
 			return
 		} else {

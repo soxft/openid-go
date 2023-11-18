@@ -30,6 +30,7 @@ func CheckName(name string) bool {
 // CheckGateway
 // 检测应用网关合法性
 func CheckGateway(gateway string) bool {
+	log.Printf("[apputil] check gateway: %s", gateway)
 	if len(gateway) < 4 || len(gateway) > 200 {
 		return false
 	}
@@ -49,6 +50,10 @@ func CheckGateway(gateway string) bool {
 	parts := strings.Split(gateway, ".")
 	for _, part := range parts {
 		if len(part) > 63 {
+			return false
+		}
+		// 是否存在空格
+		if strings.Contains(part, " ") {
 			return false
 		}
 	}
@@ -76,20 +81,16 @@ func CreateApp(userId int, appName string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	appSecret := generateAppSecret()
-	result := dbutil.D.Create(&model.App{
+
+	if result := dbutil.D.Create(&model.App{
 		UserId:     userId,
 		AppId:      appId,
 		AppName:    appName,
-		AppSecret:  appSecret,
+		AppSecret:  generateAppSecret(),
 		AppGateway: "",
-	})
-	if result.Error != nil {
-		log.Printf("[apputil] create app failed: %s", err.Error())
-		return false, errors.New("server error")
-	} else if result.RowsAffected == 0 {
-		log.Printf("[apputil] create app failed: %s", err.Error())
-		return false, errors.New("server error")
+	}); result.Error != nil || result.RowsAffected == 0 {
+		log.Printf("[apputil] create app failed: %s", result.Error.Error())
+		return false, errors.New("创建应用时发生错误, 请稍后再试")
 	}
 
 	return true, nil
@@ -217,8 +218,13 @@ func generateAppId() (string, error) {
 func CheckIfUserApp(appId string, userId int) (bool, error) {
 	var appUserId int
 	err := dbutil.D.Model(&model.App{}).Select("user_id").Where(model.App{AppId: appId}).Take(&appUserId).Error
-	if err != nil {
+	if errors.Is(err, gorm.ErrRecordNotFound) {
 		log.Printf("[ERROR] CheckIfUserApp error: %s", err)
+
+		return false, errors.New("app not exist")
+	} else if err != nil {
+		log.Printf("[ERROR] CheckIfUserApp error: %s", err)
+
 		return false, errors.New("server error")
 	}
 
@@ -228,7 +234,21 @@ func CheckIfUserApp(appId string, userId int) (bool, error) {
 	return true, nil
 }
 
-// GenerateAppSecret
+// ReGenerateSecret
+// 重新生成新的 appSecret
+func ReGenerateSecret(appId string) (string, error) {
+	appSecret := generateAppSecret()
+	err := dbutil.D.Model(&model.App{}).
+		Where(model.App{AppId: appId}).
+		Updates(model.App{AppSecret: appSecret}).Error
+	if err != nil {
+		log.Printf("[ERROR] ReGenerateAppSecret error: %s", err)
+		return "", errors.New("server error")
+	}
+	return appSecret, nil
+}
+
+// generateAppSecret
 // 创建唯一的appSecret
 func generateAppSecret() string {
 	a := toolutil.Md5(time.Now().Format("20060102"))[:16]
@@ -250,4 +270,16 @@ func checkAppIdExists(appid string) (bool, error) {
 		return false, errors.New("system error")
 	}
 	return true, nil
+}
+
+// CheckRedirectUriIsMatchUserGateway
+// @description: 检测回调地址是否匹配用户网关
+func CheckRedirectUriIsMatchUserGateway(redirectUri string, GateWay string) bool {
+	for _, gateway := range strings.Split(GateWay, ",") {
+		if redirectUri == gateway {
+			return true
+		}
+	}
+
+	return false
 }

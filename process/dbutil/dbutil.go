@@ -2,6 +2,7 @@ package dbutil
 
 import (
 	"fmt"
+	"github.com/soxft/openid-go/app/model"
 	"github.com/soxft/openid-go/config"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -13,8 +14,10 @@ import (
 
 var D *gorm.DB
 
-func init() {
+func Init() {
 	m := config.Mysql
+	log.Printf("[INFO] Mysql trying connect to tcp://%s:%s/%s", m.User, m.Addr, m.Db)
+
 	dsn := fmt.Sprintf("%s:%s@tcp(%s)/%s?charset=%s", m.User, m.Pwd, m.Addr, m.Db, m.Charset)
 
 	var logMode = logger.Warn
@@ -48,4 +51,9 @@ func init() {
 		log.Fatalf("mysql connect error: %v", err)
 	}
 
+	if err := D.AutoMigrate(model.Account{}, model.App{}, model.OpenId{}, model.UniqueId{}); err != nil {
+		log.Fatalf("mysql migrate error: %v", err)
+	}
+
+	log.Printf("[INFO] Mysql connect success")
 }

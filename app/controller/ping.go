@@ -8,5 +8,8 @@ import (
 
 func Ping(c *gin.Context) {
 	api := apiutil.New(c)
-	api.SuccessWithData("pong", time.Now().UnixNano())
+
+	api.SuccessWithData("pong", gin.H{
+		"timestamp": time.Now().Unix(),
+	})
 }

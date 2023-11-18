@@ -1,10 +1,10 @@
 package userutil
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"github.com/golang-jwt/jwt/v4"
-	"github.com/gomodule/redigo/redis"
 	"github.com/soxft/openid-go/app/model"
 	"github.com/soxft/openid-go/config"
 	"github.com/soxft/openid-go/library/toolutil"
@@ -15,7 +15,6 @@ import (
 	"regexp"
 	"time"
 )
-
 
 // GetJwtFromAuth
 // 从 Authorization 中获取JWT
@@ -47,28 +46,28 @@ func GenerateJwt(userId int, clientIp string) (string, error) {
 		LastTime: timeNow,
 	}
 	// update last login info
- 	setUserLastLogin(userInfo.ID, timeNow, clientIp)
+	setUserLastLogin(userInfo.ID, timeNow, clientIp)
 
 	return jwt.NewWithClaims(jwt.SigningMethodHS512, JwtClaims{
-		ID: 			  generateJti(uInfo),
-		ExpireAt:         time.Now().Add(24 * 30 * time.Hour).Unix(),
-		IssuedAt:         time.Now().Unix(),
-		Issuer:           config.Server.Title,
-		Username:         userInfo.Username,
-		UserId:           userId,
-		Email:            userInfo.Email,
-		LastTime:         timeNow,
+		ID:       generateJti(uInfo),
+		ExpireAt: time.Now().Add(24 * 30 * time.Hour).Unix(),
+		IssuedAt: time.Now().Unix(),
+		Issuer:   config.Server.Title,
+		Username: userInfo.Username,
+		UserId:   userId,
+		Email:    userInfo.Email,
+		LastTime: timeNow,
 	}).SignedString([]byte(config.Jwt.Secret))
 }
 
 // CheckPermission
 // @description check user permission
-func CheckPermission(_jwt string) (UserInfo, error) {
+func CheckPermission(ctx context.Context, _jwt string) (UserInfo, error) {
 	JwtClaims, err := JwtDecode(_jwt)
 	if err != nil {
 		return UserInfo{}, err
 	}
-	if checkJti(JwtClaims.ID) != nil {
+	if checkJti(ctx, JwtClaims.ID) != nil {
 		return UserInfo{}, ErrJwtExpired
 	}
 	return UserInfo{
@@ -90,7 +89,7 @@ func JwtDecode(_jwt string) (JwtClaims, error) {
 	}
 
 	if claims, ok := token.Claims.(*JwtClaims); ok && token.Valid {
-		return *claims,	nil
+		return *claims, nil
 	}
 
 	return JwtClaims{}, errors.New("jwt token error")
@@ -98,39 +97,31 @@ func JwtDecode(_jwt string) (JwtClaims, error) {
 
 // SetJwtExpire
 // @description 标记JWT过期
-func SetJwtExpire(_jwt string) error {
+func SetJwtExpire(c context.Context, _jwt string) error {
 	JwtClaims, _ := JwtDecode(_jwt)
-	_redis := redisutil.R.Get()
-	defer func(_redis redis.Conn) {
-		_ = _redis.Close()
-	}(_redis)
+	_redis := redisutil.RDB
 
 	ttl := JwtClaims.ExpireAt - time.Now().Unix()
 
-	_, err := _redis.Do("SET", config.RedisPrefix+":jti:expired:"+JwtClaims.ID, 1, "EX", ttl)
+	err := _redis.SetEx(c, getJwtExpiredKey(JwtClaims.ID), "1", time.Duration(ttl)).Err()
 	if err != nil {
 		log.Printf("[ERROR] SetJwtExpire: %s", err.Error())
 		return errors.New("set jwt expire error")
 	}
 
-	return  nil
+	return nil
 }
 
 // checkJti
-func checkJti(jti string) error {
-	_redis := redisutil.R.Get()
-	defer func(_redis redis.Conn) {
-		_ = _redis.Close()
-	}(_redis)
-	// get data from redis
-	_redisKey := config.RedisPrefix + ":jti:expired:" + jti
+func checkJti(ctx context.Context, jti string) error {
+	_redis := redisutil.RDB
 
-	expired, err := _redis.Do("EXISTS", _redisKey)
+	expired, err := _redis.Exists(ctx, getJwtExpiredKey(jti)).Result()
 	if err != nil {
 		log.Printf("[ERROR] checkJti: %s", err.Error())
 		return errors.New("check jti error")
 	}
-	if expired == int64(1) {
+	if expired == 1 {
 		return ErrJwtExpired
 	}
 
@@ -142,12 +133,17 @@ func generateJti(user UserInfo) string {
 	JtiJson, _ := json.Marshal(map[string]string{
 		"username": user.Username,
 		"randStr":  toolutil.RandStr(32),
-		"time": time.Now().Format("150405"),
+		"time":     time.Now().Format("150405"),
 	})
 	_jti := toolutil.Md5(string(JtiJson))
 	return _jti
 }
 
-func setUserLastLogin(userId int,lastTime int64, lastIp string) {
+func setUserLastLogin(userId int, lastTime int64, lastIp string) {
 	dbutil.D.Model(&model.Account{}).Where(model.Account{ID: userId}).Updates(&model.Account{LastTime: lastTime, LastIp: lastIp})
+}
+
+// getJwtExpiredKey
+func getJwtExpiredKey(jti string) string {
+	return config.RedisPrefix + ":jti:expired:" + jti
 }

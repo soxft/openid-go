@@ -44,7 +44,7 @@ func UserInfo(c *gin.Context) {
 // @description 用户退出
 func UserLogout(c *gin.Context) {
 	api := apiutil.New(c)
-	_ = userutil.SetJwtExpire(c.GetString("token"))
+	_ = userutil.SetJwtExpire(c, c.GetString("token"))
 	api.Success("success")
 }
 
@@ -94,7 +94,7 @@ func UserPasswordUpdate(c *gin.Context) {
 	}
 
 	// make jwt token expire
-	_ = userutil.SetJwtExpire(c.GetString("token"))
+	_ = userutil.SetJwtExpire(c, c.GetString("token"))
 
 	// send safe notify email
 	userutil.PasswordChangeNotify(c.GetString("email"), time.Now())
@@ -141,7 +141,7 @@ func UserEmailUpdateCode(c *gin.Context) {
 	}
 
 	// send mail
-	coder := codeutil.New()
+	coder := codeutil.New(c)
 	verifyCode := coder.Create(4)
 	_msg, _ := json.Marshal(mailutil.Mail{
 		ToAddress: newEmail,
@@ -150,7 +150,7 @@ func UserEmailUpdateCode(c *gin.Context) {
 		Typ:       "emailChange",
 	})
 
-	if err := coder.Save("emailChange", newEmail, verifyCode, 60*10); err != nil {
+	if err := coder.Save("emailChange", newEmail, verifyCode, 60*time.Minute); err != nil {
 		api.Fail("send code failed")
 		return
 	}
@@ -177,7 +177,7 @@ func UserEmailUpdate(c *gin.Context) {
 	}
 
 	// verify code
-	coder := codeutil.New()
+	coder := codeutil.New(c)
 	if pass, err := coder.Check("emailChange", newEmail, code); !pass || err != nil {
 		api.Fail("验证码错误或已过期")
 		return
@@ -197,6 +197,6 @@ func UserEmailUpdate(c *gin.Context) {
 
 	coder.Consume("emailChange", newEmail)
 	userutil.EmailChangeNotify(c.GetString("email"), time.Now())
-	_ = userutil.SetJwtExpire(c.GetString("token"))
+	_ = userutil.SetJwtExpire(c, c.GetString("token"))
 	api.Success("修改成功, 请重新登录")
 }

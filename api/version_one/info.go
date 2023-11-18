@@ -1,6 +1,7 @@
 package version_one
 
 import (
+	"errors"
 	"github.com/gin-gonic/gin"
 	"github.com/soxft/openid-go/api/version_one/helper"
 	"github.com/soxft/openid-go/library/apiutil"
@@ -29,9 +30,9 @@ func Info(c *gin.Context) {
 	}
 
 	// 检测token是否正确 并获取userId
-	userId, err := helper.GetUserIdByToken(appId, token)
+	userId, err := helper.GetUserIdByToken(c, appId, token)
 	if err != nil {
-		if err == helper.ErrTokenNotExists {
+		if errors.Is(err, helper.ErrTokenNotExists) {
 			api.Fail("Token not exists")
 			return
 		}
@@ -44,7 +45,7 @@ func Info(c *gin.Context) {
 		return
 	}
 	// delete token
-	_ = helper.DeleteToken(appId, token)
+	_ = helper.DeleteToken(c, appId, token)
 	api.SuccessWithData("success", gin.H{
 		"openId":   userIds.OpenId,
 		"uniqueId": userIds.UniqueId,

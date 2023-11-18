@@ -47,6 +47,8 @@ func initRoute(r *gin.Engine) {
 			app.PUT("/id/:appid", controller.AppEdit)
 			app.DELETE("/id/:appid", controller.AppDel)
 			app.GET("/id/:appid", controller.AppInfo)
+
+			app.POST("/id/:appid/reGenerateSecret", controller.AppReGenerateSecret)
 		}
 
 		forget := r.Group("/forget")

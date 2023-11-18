@@ -1,30 +1,38 @@
 package redisutil
 
 import (
-	"github.com/gomodule/redigo/redis"
+	"context"
+	"github.com/redis/go-redis/v9"
 	"github.com/soxft/openid-go/config"
 	"log"
+	"time"
 )
 
-var R *redis.Pool
+var RDB *redis.Client
 
-func init() {
+func Init() {
+	log.Printf("[INFO] Redis trying connect to tcp://%s/%d", config.Redis.Addr, config.Redis.Db)
+
 	r := config.Redis
-	R = &redis.Pool{
-		MaxIdle:   r.MaxIdle,
-		MaxActive: r.MaxActive,
-		Dial: func() (redis.Conn, error) {
-			c, err := redis.Dial("tcp", r.Addr,
-				redis.DialPassword(r.Pwd),
-				redis.DialDatabase(r.Db),
-			)
-			if err != nil {
-				log.Fatalf(err.Error())
-			}
-			return c, err
-		},
+
+	rdb := redis.NewClient(&redis.Options{
+		Addr:            r.Addr,
+		Password:        r.Pwd, // no password set
+		DB:              r.Db,  // use default DB
+		MinIdleConns:    r.MinIdle,
+		MaxIdleConns:    r.MaxIdle,
+		MaxRetries:      r.MaxRetries,
+		ConnMaxLifetime: 5 * time.Minute,
+		MaxActiveConns:  r.MaxActive,
+	})
+
+	RDB = rdb
+
+	// test redis
+	pong, err := rdb.Ping(context.Background()).Result()
+	if err != nil {
+		log.Fatalf("[ERROR] Redis ping failed: %v", err)
 	}
-	if _, err := R.Get().Do("PING"); err != nil {
-		log.Fatalf("redis connect error: %s", err.Error())
-	}
+
+	log.Printf("[INFO] Redis init success, pong: %s ", pong)
 }

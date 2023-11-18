@@ -1,25 +1,24 @@
 package mq
 
 import (
+	"context"
 	"encoding/json"
-	"github.com/gomodule/redigo/redis"
+	"github.com/redis/go-redis/v9"
 	"log"
 	"sync"
 	"time"
 )
 
-func New(redis *redis.Pool, maxRetries int) MessageQueue {
+func New(c context.Context, redis *redis.Client, maxRetries int) MessageQueue {
 	return &QueueArgs{
 		redis:      redis,
 		maxRetries: maxRetries,
+		ctx:        c,
 	}
 }
 
 func (q *QueueArgs) Publish(topic string, msg string, delay int64) error {
-	_redis := q.redis.Get()
-	defer func(_redis redis.Conn) {
-		_ = _redis.Close()
-	}(_redis)
+	_redis := q.redis
 
 	data := &MsgArgs{
 		Msg:     msg,
@@ -29,27 +28,25 @@ func (q *QueueArgs) Publish(topic string, msg string, delay int64) error {
 	if _data, err := json.Marshal(data); err != nil {
 		return err
 	} else {
-		_, err := _redis.Do("LPUSH", "rmq:"+topic, string(_data))
-		return err
+		return _redis.LPush(q.ctx, "rmq:"+topic, string(_data)).Err()
 	}
 }
 
 func (q *QueueArgs) Subscribe(topic string, processes int, handler func(data string)) {
 	for i := 0; i < processes; i++ {
 		go func() {
-			_redis := q.redis.Get()
-			defer func(_redisConn redis.Conn) {
+			_redis := q.redis
+			defer func() {
 				// handle error
-				_ = _redisConn.Close()
 				if err := recover(); err != nil {
 					q.Subscribe(topic, 1, handler)
 				}
-			}(_redis)
+			}()
 
 			// 阻塞
 			wg := sync.WaitGroup{}
 			for {
-				_data, err := redis.Strings(_redis.Do("BRPOP", "rmq:"+topic, 1))
+				_data, err := _redis.BRPop(q.ctx, 1*time.Second, "rmq:"+topic).Result()
 				if err != nil || _data == nil {
 					continue
 				}
@@ -73,17 +70,17 @@ func (q *QueueArgs) Subscribe(topic string, processes int, handler func(data str
 							} else {
 								// max retry
 								if _msg.Retry > q.maxRetries {
-									_, _ = _redis.Do("LPUSH", "rmq:"+topic+"failed", _data)
+									_redis.LPush(q.ctx, "rmq:"+topic+"failed", _data)
 									return
 								}
-								_, _ = _redis.Do("LPUSH", "rmq:"+topic, _data)
+								_redis.LPush(q.ctx, "rmq:"+topic, _data)
 							}
 							_msg.Retry++
 						}
 					}()
 					// delay 重新放入队列
 					if _msg.DelayAt > time.Now().Unix() {
-						if _, err = _redis.Do("LPUSH", "rmq:"+topic, _dataString); err != nil {
+						if err := _redis.LPush(q.ctx, "rmq:"+topic, _dataString).Err(); err != nil {
 							log.Printf("[ERROR] mq delay lpush: %s", err)
 						}
 						return

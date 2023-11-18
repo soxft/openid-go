@@ -2,53 +2,51 @@ package mailutil
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/gomodule/redigo/redis"
 	"github.com/soxft/openid-go/config"
 	"github.com/soxft/openid-go/library/toolutil"
 	"github.com/soxft/openid-go/process/redisutil"
+	"time"
 )
 
 // CreateBeacon
 // @description: 创建邮件发送信标
-func CreateBeacon(c *gin.Context, mail string, timeout int) error {
-	_redis := redisutil.R.Get()
-	defer func(_redis redis.Conn) {
-		_ = _redis.Close()
-	}(_redis)
+func CreateBeacon(c *gin.Context, mail string, timeout time.Duration) error {
+	_redis := redisutil.RDB
 
-	unique := generateUnique(c)
-	redisPrefix := config.Redis.Prefix
+	ipKey, mailKey := getRKeys(c, mail)
 
-	ipKey := redisPrefix + ":beacon:ip:" + unique
-	mailKey := redisPrefix + ":beacon:mail:" + toolutil.Md5(mail)
-	_, _ = _redis.Do("SETEX", ipKey, timeout, "1")
-	_, _ = _redis.Do("SETEX", mailKey, timeout, "1")
+	_redis.SetEx(c, ipKey, "1", timeout)
+	_redis.SetEx(c, mailKey, "1", timeout)
 	return nil
+}
+
+// DeleteBeacon
+// @description: 手动删除邮件创建新信标
+func DeleteBeacon(c *gin.Context, mail string) {
+	_redis := redisutil.RDB
+
+	ipKey, mailKey := getRKeys(c, mail)
+
+	_redis.Del(c, ipKey)
+	_redis.Del(c, mailKey)
 }
 
 // CheckBeacon
 // @description: 检查邮件发送信标 避免频繁发信
 func CheckBeacon(c *gin.Context, mail string) (bool, error) {
-	_redis := redisutil.R.Get()
-	defer func(_redis redis.Conn) {
-		_ = _redis.Close()
-	}(_redis)
+	_redis := redisutil.RDB
 
-	unique := generateUnique(c)
-	redisPrefix := config.Redis.Prefix
+	ipKey, mailKey := getRKeys(c, mail)
 
-	ipExists, err := _redis.Do("EXISTS", redisPrefix+":beacon:ip:"+unique)
-	if err != nil {
+	if ipExists, err := _redis.Exists(c, ipKey).Result(); err != nil || ipExists != 1 {
 		return false, err
 	}
-	mailExists, err := _redis.Do("EXISTS", redisPrefix+":beacon:mail:"+toolutil.Md5(mail))
-	if err != nil {
+
+	if mailExists, err := _redis.Exists(c, mailKey).Result(); err != nil || mailExists != 1 {
 		return false, err
 	}
-	if ipExists.(int64) == 1 && mailExists.(int64) == 1 {
-		return true, nil
-	}
-	return false, nil
+
+	return true, nil
 }
 
 func generateUnique(c *gin.Context) string {
@@ -56,4 +54,14 @@ func generateUnique(c *gin.Context) string {
 	userIp := c.ClientIP()
 	userAgent := c.Request.UserAgent()
 	return toolutil.Md5(userIp + userAgent)
+}
+
+func getRKeys(c *gin.Context, mail string) (string, string) {
+	unique := generateUnique(c)
+	redisPrefix := config.Redis.Prefix
+
+	ipKey := redisPrefix + ":beacon:ip:" + unique
+	mailKey := redisPrefix + ":beacon:mail:" + toolutil.Md5(mail)
+
+	return ipKey, mailKey
 }

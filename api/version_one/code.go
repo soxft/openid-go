@@ -1,6 +1,7 @@
 package version_one
 
 import (
+	"errors"
 	"github.com/gin-gonic/gin"
 	"github.com/soxft/openid-go/api/version_one/helper"
 	"github.com/soxft/openid-go/library/apiutil"
@@ -36,7 +37,7 @@ func Code(c *gin.Context) {
 	// get app Info
 	var appInfo apputil.AppFullInfoStruct
 	if appInfo, err = apputil.GetAppInfo(appId); err != nil {
-		if err == apputil.ErrAppNotExist {
+		if errors.Is(err, apputil.ErrAppNotExist) {
 			api.Fail("app not exist")
 			return
 		}
@@ -52,14 +53,14 @@ func Code(c *gin.Context) {
 	}
 
 	// 判断是否一致
-	if appGateWay != redirectUriDomain.Host {
+	if !apputil.CheckRedirectUriIsMatchUserGateway(redirectUriDomain.Host, appGateWay) {
 		api.FailWithData("redirect_uri is not match with appGateWay", gin.H{
 			"legal": appGateWay,
 			"given": redirectUriDomain.Host,
 		})
 		return
 	}
-	token, err := helper.GenerateToken(appId, c.GetInt("userId"))
+	token, err := helper.GenerateToken(c, appId, c.GetInt("userId"))
 	if err != nil {
 		log.Printf("[ERROR] get app info error: %s", err.Error())
 		api.Fail("system error")
