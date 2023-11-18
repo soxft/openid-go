@@ -62,12 +62,12 @@ func GenerateJwt(userId int, clientIp string) (string, error) {
 
 // CheckPermission
 // @description check user permission
-func CheckPermission(_jwt string) (UserInfo, error) {
+func CheckPermission(ctx context.Context, _jwt string) (UserInfo, error) {
 	JwtClaims, err := JwtDecode(_jwt)
 	if err != nil {
 		return UserInfo{}, err
 	}
-	if checkJti(JwtClaims.ID) != nil {
+	if checkJti(ctx, JwtClaims.ID) != nil {
 		return UserInfo{}, ErrJwtExpired
 	}
 	return UserInfo{
@@ -113,13 +113,13 @@ func SetJwtExpire(c context.Context, _jwt string) error {
 }
 
 // checkJti
-func checkJti(jti string) error {
+func checkJti(ctx context.Context, jti string) error {
 	_redis := redisutil.R
 
 	// get data from redis
 	_redisKey := config.RedisPrefix + ":jti:expired:" + jti
-	
-	expired, err := _redis.Exists(context.Background(), _redisKey).Result()
+
+	expired, err := _redis.Exists(ctx, _redisKey).Result()
 	if err != nil {
 		log.Printf("[ERROR] checkJti: %s", err.Error())
 		return errors.New("check jti error")
