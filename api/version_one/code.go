@@ -53,7 +53,7 @@ func Code(c *gin.Context) {
 	}
 
 	// 判断是否一致
-	if appGateWay != redirectUriDomain.Host {
+	if !apputil.CheckRedirectUriIsMatchUserGateway(redirectUriDomain.Host, appGateWay) {
 		api.FailWithData("redirect_uri is not match with appGateWay", gin.H{
 			"legal": appGateWay,
 			"given": redirectUriDomain.Host,

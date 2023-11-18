@@ -30,6 +30,7 @@ func CheckName(name string) bool {
 // CheckGateway
 // 检测应用网关合法性
 func CheckGateway(gateway string) bool {
+	log.Printf("[apputil] check gateway: %s", gateway)
 	if len(gateway) < 4 || len(gateway) > 200 {
 		return false
 	}
@@ -49,6 +50,10 @@ func CheckGateway(gateway string) bool {
 	parts := strings.Split(gateway, ".")
 	for _, part := range parts {
 		if len(part) > 63 {
+			return false
+		}
+		// 是否存在空格
+		if strings.Contains(part, " ") {
 			return false
 		}
 	}
@@ -265,4 +270,16 @@ func checkAppIdExists(appid string) (bool, error) {
 		return false, errors.New("system error")
 	}
 	return true, nil
+}
+
+// CheckRedirectUriIsMatchUserGateway
+// @description: 检测回调地址是否匹配用户网关
+func CheckRedirectUriIsMatchUserGateway(redirectUri string, GateWay string) bool {
+	for _, gateway := range strings.Split(GateWay, ",") {
+		if redirectUri == gateway {
+			return true
+		}
+	}
+
+	return false
 }

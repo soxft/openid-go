@@ -5,6 +5,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/soxft/openid-go/library/apiutil"
 	"github.com/soxft/openid-go/library/apputil"
+	"strings"
 )
 
 // AppInfo
@@ -26,7 +27,7 @@ func AppInfo(c *gin.Context) {
 		api.SuccessWithData("success", gin.H{
 			"id":      appInfo.Id,
 			"name":    appInfo.AppName,
-			"gateway": appInfo.AppGateway,
+			"gateway": strings.ReplaceAll(appInfo.AppGateway, ",", "\n"),
 		})
 	}
 }

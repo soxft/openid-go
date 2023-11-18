@@ -39,17 +39,26 @@ func AppEdit(c *gin.Context) {
 	appName := c.PostForm("app_name")
 	appGateway := c.PostForm("app_gateway")
 
-	appGateway = strings.TrimSpace(appGateway)
 	api := apiutil.New(c)
-
 	// 参数合法性检测
 	if !apputil.CheckName(appName) {
 		api.Fail("应用名称不合法")
 		return
 	}
-	if !apputil.CheckGateway(appGateway) {
-		api.Fail("应用网关不合法")
-		return
+
+	// 检测网关是否合法
+	var gateways []string
+
+	for _, gateway := range strings.Split(appGateway, "\n") {
+		gateway = strings.TrimSpace(gateway)
+		if gateway == "" {
+			continue
+		}
+		if !apputil.CheckGateway(gateway) {
+			apiutil.New(c).Fail("网关不合法")
+			return
+		}
+		gateways = append(gateways, gateway)
 	}
 
 	// 判断是否为 该用户的app
@@ -61,8 +70,15 @@ func AppEdit(c *gin.Context) {
 		return
 	}
 
-	// do change
-	err := dbutil.D.Model(model.App{}).Where(model.App{AppId: appId}).Updates(model.App{AppName: appName, AppGateway: appGateway}).Error
+	// Do Update
+	err := dbutil.D.Model(model.App{}).
+		Where(model.App{
+			AppId: appId,
+		}).
+		Updates(model.App{
+			AppName:    appName,
+			AppGateway: strings.Join(gateways, ","),
+		}).Error
 	if err != nil {
 		log.Printf("[ERROR] db.Exec err: %v", err)
 		api.Fail("system error")
@@ -154,6 +170,7 @@ func AppInfo(c *gin.Context) {
 		api.Fail("system error")
 		return
 	} else {
+		appInfo.AppGateway = strings.ReplaceAll(appInfo.AppGateway, ",", "\n")
 		api.SuccessWithData("success", appInfo)
 	}
 }
