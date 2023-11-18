@@ -2,6 +2,7 @@ package controller
 
 import (
 	"encoding/json"
+	"errors"
 	"github.com/gin-gonic/gin"
 	"github.com/soxft/openid-go/app/model"
 	"github.com/soxft/openid-go/config"
@@ -113,10 +114,10 @@ func RegisterSubmit(c *gin.Context) {
 
 	// 重复检测
 	if err := userutil.RegisterCheck(username, email); err != nil {
-		if err == userutil.ErrUsernameExists {
+		if errors.Is(err, userutil.ErrUsernameExists) {
 			api.Fail("用户名已存在")
 			return
-		} else if err == userutil.ErrEmailExists {
+		} else if errors.Is(err, userutil.ErrEmailExists) {
 			api.Fail("邮箱已存在")
 			return
 		}
