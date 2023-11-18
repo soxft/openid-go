@@ -30,7 +30,7 @@ func CheckName(name string) bool {
 // CheckGateway
 // 检测应用网关合法性
 func CheckGateway(gateway string) bool {
-	log.Printf("[apputil] check gateway: %s", gateway)
+	//log.Printf("[apputil] check gateway: %s", gateway)
 	if len(gateway) < 4 || len(gateway) > 200 {
 		return false
 	}
