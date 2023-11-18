@@ -22,6 +22,7 @@ type RedisConfig struct {
 	Pwd        string `yaml:"Password"`
 	Db         int    `yaml:"Database"`
 	Prefix     string `yaml:"Prefix"`
+	MinIdle    int    `yaml:"MinIdle"`
 	MaxIdle    int    `yaml:"MaxIdle"`
 	MaxActive  int    `yaml:"MaxActive"`
 	MaxRetries int    `yaml:"MaxRetries"`

@@ -10,6 +10,7 @@ Redis:
   Password:
   Database: 0
   Prefix: openid
+  MinIdle: 10
   MaxIdle: 50
   MaxActive: 500
   MaxRetries: 3

@@ -46,7 +46,7 @@ func (q *QueueArgs) Subscribe(topic string, processes int, handler func(data str
 			// 阻塞
 			wg := sync.WaitGroup{}
 			for {
-				_data, err := _redis.BRPop(q.ctx, 1, "rmq:"+topic).Result()
+				_data, err := _redis.BRPop(q.ctx, 1*time.Second, "rmq:"+topic).Result()
 				if err != nil || _data == nil {
 					continue
 				}

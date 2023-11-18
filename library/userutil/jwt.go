@@ -103,7 +103,7 @@ func SetJwtExpire(c context.Context, _jwt string) error {
 
 	ttl := JwtClaims.ExpireAt - time.Now().Unix()
 
-	err := _redis.SetEx(c, config.RedisPrefix+":jti:expired:"+JwtClaims.ID, "1", time.Duration(ttl)).Err()
+	err := _redis.SetEx(c, getJwtExpiredKey(JwtClaims.ID), "1", time.Duration(ttl)).Err()
 	if err != nil {
 		log.Printf("[ERROR] SetJwtExpire: %s", err.Error())
 		return errors.New("set jwt expire error")
@@ -116,10 +116,7 @@ func SetJwtExpire(c context.Context, _jwt string) error {
 func checkJti(ctx context.Context, jti string) error {
 	_redis := redisutil.R
 
-	// get data from redis
-	_redisKey := config.RedisPrefix + ":jti:expired:" + jti
-
-	expired, err := _redis.Exists(ctx, _redisKey).Result()
+	expired, err := _redis.Exists(ctx, getJwtExpiredKey(jti)).Result()
 	if err != nil {
 		log.Printf("[ERROR] checkJti: %s", err.Error())
 		return errors.New("check jti error")
@@ -144,4 +141,9 @@ func generateJti(user UserInfo) string {
 
 func setUserLastLogin(userId int, lastTime int64, lastIp string) {
 	dbutil.D.Model(&model.Account{}).Where(model.Account{ID: userId}).Updates(&model.Account{LastTime: lastTime, LastIp: lastIp})
+}
+
+// getJwtExpiredKey
+func getJwtExpiredKey(jti string) string {
+	return config.RedisPrefix + ":jti:expired:" + jti
 }

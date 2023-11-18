@@ -5,6 +5,7 @@ import (
 	"github.com/redis/go-redis/v9"
 	"github.com/soxft/openid-go/config"
 	"log"
+	"time"
 )
 
 var R *redis.Client
@@ -14,18 +15,22 @@ func Init() {
 
 	r := config.Redis
 
-	R := redis.NewClient(&redis.Options{
-		Addr:           r.Addr,
-		Password:       r.Pwd, // no password set
-		DB:             r.Db,  // use default DB
-		MaxIdleConns:   r.MaxIdle,
-		MaxActiveConns: r.MaxActive,
-		MaxRetries:     r.MaxRetries,
+	rdb := redis.NewClient(&redis.Options{
+		Addr:            r.Addr,
+		Password:        r.Pwd, // no password set
+		DB:              r.Db,  // use default DB
+		MinIdleConns:    r.MinIdle,
+		MaxIdleConns:    r.MaxIdle,
+		MaxRetries:      r.MaxRetries,
+		ConnMaxLifetime: 5 * time.Minute,
+		MaxActiveConns:  r.MaxActive,
 	})
 
-	if err := R.Ping(context.Background()).Err(); err != nil {
+	if err := rdb.Ping(context.Background()).Err(); err != nil {
 		log.Fatalf("[ERROR] Redis connect error: %s", err)
 	}
+
+	R = rdb
 
 	log.Printf("[INFO] Redis connect success")
 }
