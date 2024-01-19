@@ -47,6 +47,15 @@ func AppEdit(c *gin.Context) {
 		return
 	}
 
+	if len(appGateway) == 0 {
+		api.Fail("网关不能为空")
+		return
+	} else if len(appGateway) > 200 {
+		api.Fail("网关长度不能超过 200字符")
+		return
+	}
+
+	var gateWayCount int
 	// 检测网关是否合法
 	var gateways []string
 
@@ -60,6 +69,11 @@ func AppEdit(c *gin.Context) {
 			return
 		}
 		gateways = append(gateways, gateway)
+
+		if gateWayCount++; gateWayCount > 10 {
+			api.Fail("网关数量不能超过 10 个")
+			return
+		}
 	}
 
 	// 判断是否为 该用户的app
