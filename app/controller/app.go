@@ -2,6 +2,7 @@ package controller
 
 import (
 	"errors"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/soxft/openid-go/app/model"
 	"github.com/soxft/openid-go/library/apiutil"
@@ -55,7 +56,7 @@ func AppEdit(c *gin.Context) {
 			continue
 		}
 		if !apputil.CheckGateway(gateway) {
-			apiutil.New(c).Fail("网关不合法")
+			apiutil.New(c).Fail(fmt.Sprintf("网关 %s 不合法", gateway))
 			return
 		}
 		gateways = append(gateways, gateway)
@@ -138,7 +139,7 @@ func AppReGenerateSecret(c *gin.Context) {
 		log.Printf("[ERROR] ReGenerateSecret error: %s", err)
 		api.Fail("re generate secret failed, try again later")
 	} else {
-		api.SuccessWithData("re generate secret success", gin.H{
+		api.SuccessWithData("重置 AppSecret 成功!", gin.H{
 			"secret": newToken,
 		})
 	}
