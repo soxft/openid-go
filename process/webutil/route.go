@@ -44,6 +44,9 @@ func initRoute(r *gin.Engine) {
 			app.Use(middleware.AuthPermission())
 			app.GET("/list", controller.AppGetList)
 			app.POST("/create", controller.AppCreate)
+
+			// 判断 App 归属中间件
+			app.Use(middleware.UserApp())
 			app.PUT("/id/:appid", controller.AppEdit)
 			app.DELETE("/id/:appid", controller.AppDel)
 			app.GET("/id/:appid", controller.AppInfo)

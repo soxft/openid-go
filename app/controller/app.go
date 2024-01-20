@@ -76,15 +76,6 @@ func AppEdit(c *gin.Context) {
 		}
 	}
 
-	// 判断是否为 该用户的app
-	if i, err := apputil.CheckIfUserApp(appId, c.GetInt("userId")); err != nil {
-		api.Fail("system error")
-		return
-	} else if !i {
-		api.Fail("没有权限")
-		return
-	}
-
 	// Do Update
 	err := dbutil.D.Model(model.App{}).
 		Where(model.App{
@@ -109,17 +100,6 @@ func AppDel(c *gin.Context) {
 	appId := c.Param("appid")
 	api := apiutil.New(c)
 
-	// 判断是否为 该用户的app
-	if i, err := apputil.CheckIfUserApp(appId, c.GetInt("userId")); err != nil {
-		api.Fail(err.Error())
-
-		return
-	} else if !i {
-		api.Fail("没有权限")
-
-		return
-	}
-
 	// delete
 	if success, err := apputil.DeleteUserApp(appId); !success {
 		api.Fail(err.Error())
@@ -130,23 +110,12 @@ func AppDel(c *gin.Context) {
 	}
 }
 
-//TODO 将 判断是否为该用户的APP 的逻辑抽离出来 使用 middleware
-
 // AppReGenerateSecret
 // @description: 重新生成secret
 func AppReGenerateSecret(c *gin.Context) {
 	appId := c.Param("appid")
 
 	api := apiutil.New(c)
-
-	// 判断是否为 该用户的app
-	if i, err := apputil.CheckIfUserApp(appId, c.GetInt("userId")); err != nil {
-		api.Fail("system error")
-		return
-	} else if !i {
-		api.Fail("没有权限")
-		return
-	}
 
 	// re generate secret
 	if newToken, err := apputil.ReGenerateSecret(appId); err != nil {
@@ -165,16 +134,6 @@ func AppReGenerateSecret(c *gin.Context) {
 func AppInfo(c *gin.Context) {
 	appId := c.Param("appid")
 	api := apiutil.New(c)
-
-	// 判断是否为 该用户的app
-	if i, err := apputil.CheckIfUserApp(appId, c.GetInt("userId")); err != nil {
-		api.Fail(err.Error())
-
-		return
-	} else if !i {
-		api.Fail("没有权限")
-		return
-	}
 
 	// get app info
 	if appInfo, err := apputil.GetAppInfo(appId); err != nil {
