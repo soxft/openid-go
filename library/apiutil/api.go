@@ -32,16 +32,20 @@ func (c *Api) FailWithData(msg string, data interface{}) {
 	c.Out(false, msg, data)
 }
 
-func (c *Api) Abort(httpCode int, msg string, errorCode int) {
+func (c *Api) Abort(httpCode int, msg string, errors string) {
 	c.Ctx.AbortWithStatusJSON(httpCode, gin.H{
 		"success": false,
 		"message": msg,
 		"data": gin.H{
-			"errorCode": errorCode,
+			"error": errors,
 		},
 	})
 }
 
-func (c *Api) Abort401(msg string, errorCode int) {
-	c.Abort(401, msg, errorCode)
+func (c *Api) Abort401(msg string, errors string) {
+	c.Abort(401, msg, errors)
+}
+
+func (c *Api) Abort200(msg string, errors string) {
+	c.Abort(200, msg, errors)
 }

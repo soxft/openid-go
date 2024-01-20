@@ -9,7 +9,6 @@ import (
 	"gorm.io/gorm"
 	"html"
 	"log"
-	"math/rand"
 	"strconv"
 	"strings"
 	"time"
@@ -202,8 +201,7 @@ func CheckAppSecret(appId string, appSecret string) error {
 func generateAppId() (string, error) {
 	timeUnix := time.Now().Unix()
 	Tp := strconv.FormatInt(timeUnix, 10)
-	// 随机数种子
-	rand.Seed(time.Now().UnixNano())
+
 	appId := time.Now().Format("20060102") + Tp[len(Tp)-4:] + strconv.Itoa(toolutil.RandInt(4))
 	if exists, err := checkAppIdExists(appId); err != nil {
 		return "", err
