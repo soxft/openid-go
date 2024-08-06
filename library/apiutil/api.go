@@ -8,8 +8,8 @@ func New(ctx *gin.Context) *Api {
 	}
 }
 
-func (c *Api) Out(success bool, msg string, data interface{}) {
-	c.Ctx.JSON(200, gin.H{
+func (c *Api) Out(httpCode int, success bool, msg string, data interface{}) {
+	c.Ctx.JSON(httpCode, gin.H{
 		"success": success,
 		"message": msg,
 		"data":    data,
@@ -17,20 +17,28 @@ func (c *Api) Out(success bool, msg string, data interface{}) {
 }
 
 func (c *Api) Success(msg string) {
-	c.Out(true, msg, gin.H{})
+	c.Out(200, true, msg, gin.H{})
 }
 
 func (c *Api) SuccessWithData(msg string, data interface{}) {
-	c.Out(true, msg, data)
+	c.Out(200, true, msg, data)
 }
 
 func (c *Api) Fail(msg string) {
-	c.Out(false, msg, gin.H{})
+	c.Out(200, false, msg, gin.H{})
 }
 
 func (c *Api) FailWithData(msg string, data interface{}) {
-	c.Out(false, msg, data)
+	c.Out(200, false, msg, data)
 }
+
+// httpCode
+
+func (c *Api) FailWithHttpCode(httpCode int, msg string) {
+	c.Out(httpCode, false, msg, gin.H{})
+}
+
+// Abort
 
 func (c *Api) Abort(httpCode int, msg string, errors string) {
 	c.Ctx.AbortWithStatusJSON(httpCode, gin.H{

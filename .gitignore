@@ -4,3 +4,4 @@ config.yaml
 .DS_Store
 main
 openid
+.VSCodeCounter

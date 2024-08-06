@@ -52,7 +52,7 @@ func ForgetPasswordCode(c *gin.Context) {
 	})
 
 	if err := coder.Save("forgetPwd", email, verifyCode, 60*time.Minute); err != nil {
-		api.Out(false, "send code failed", gin.H{})
+		api.Fail("send code failed")
 		return
 	}
 	if err := queueutil.Q.Publish("mail", string(_msg), 0); err != nil {

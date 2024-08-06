@@ -6,6 +6,7 @@ import (
 	"github.com/soxft/openid-go/app/controller"
 	"github.com/soxft/openid-go/app/middleware"
 	"github.com/soxft/openid-go/config"
+	"github.com/soxft/openid-go/library/apiutil"
 )
 
 func initRoute(r *gin.Engine) {
@@ -73,8 +74,7 @@ func initRoute(r *gin.Engine) {
 }
 
 func noRoute(c *gin.Context) {
-	c.JSON(404, gin.H{
-		"success": false,
-		"message": "Route not exists",
-	})
+	api := apiutil.New(c)
+
+	api.FailWithHttpCode(404, "Route not exists")
 }
