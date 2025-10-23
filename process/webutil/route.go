@@ -40,6 +40,12 @@ func initRoute(r *gin.Engine) {
 			user.PATCH("/email/update", controller.UserEmailUpdate)
 		}
 
+		pass := r.Group("/passkey")
+		{
+			pass.Use(middleware.AuthPermission())
+			pass.GET("/create/option", controller.PasskeyGetOption)
+		}
+
 		app := r.Group("/app")
 		{
 			app.Use(middleware.AuthPermission())

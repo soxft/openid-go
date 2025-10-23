@@ -22,7 +22,11 @@ func Init() {
 	initRoute(r)
 
 	log.Printf("[INFO] Web initailizing success, running at %s ", config.Server.Addr)
-	if err := r.Run(config.Server.Addr); err != nil {
+	//if err := r.Run(config.Server.Addr); err != nil {
+	//	log.Panic(err)
+	//}
+
+	if err := r.RunTLS(config.Server.Addr, "server.pem", "server.key"); err != nil {
 		log.Panic(err)
 	}
 }

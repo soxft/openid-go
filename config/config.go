@@ -2,8 +2,8 @@ package config
 
 import (
 	"gopkg.in/yaml.v2"
-	"io/ioutil"
 	"log"
+	"os"
 )
 
 var (
@@ -19,7 +19,7 @@ var (
 )
 
 func init() {
-	data, err := ioutil.ReadFile("config.yaml")
+	data, err := os.ReadFile("config.yaml")
 	if err != nil {
 		log.Panicf("error when reading yaml: %v", err)
 	}

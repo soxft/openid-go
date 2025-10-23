@@ -27,3 +27,19 @@ func RandInt(length int) int {
 	}
 	return code
 }
+
+func RandStrInt(length int) string {
+	var result []byte
+
+	r := rand.New(rand.NewSource(time.Now().Unix()))
+
+	for i := 0; i < length; i++ {
+		j := r.Intn(4)
+		if j%2 == 0 {
+			result = append(result, strList[r.Int63()%int64(len(strList))])
+		} else {
+			result = append(result, byte(r.Intn(10)+'0'))
+		}
+	}
+	return string(result)
+}

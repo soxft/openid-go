@@ -1,6 +1,6 @@
 module github.com/soxft/openid-go
 
-go 1.21.6
+go 1.22
 
 require (
 	github.com/aliyun/alibaba-cloud-sdk-go v1.61.1582
@@ -10,8 +10,8 @@ require (
 	golang.org/x/crypto v0.7.0
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
 	gopkg.in/yaml.v2 v2.4.0
-	gorm.io/driver/mysql v1.3.4
-	gorm.io/gorm v1.23.8
+	gorm.io/driver/mysql v1.5.7
+	gorm.io/gorm v1.25.7
 )
 
 require (
@@ -21,7 +21,7 @@ require (
 	github.com/go-playground/locales v0.14.0 // indirect
 	github.com/go-playground/universal-translator v0.18.0 // indirect
 	github.com/go-playground/validator/v10 v10.3.0 // indirect
-	github.com/go-sql-driver/mysql v1.6.0 // indirect
+	github.com/go-sql-driver/mysql v1.7.0 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect

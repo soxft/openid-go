@@ -5,3 +5,5 @@ config.yaml
 main
 openid
 .VSCodeCounter
+*.key
+*.pem

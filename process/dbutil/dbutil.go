@@ -44,6 +44,10 @@ func Init() {
 	}
 
 	sqlDb, err := D.DB()
+	if err != nil {
+		log.Fatalf("mysql get db error: %v", err)
+	}
+
 	sqlDb.SetMaxOpenConns(m.MaxOpen)
 	sqlDb.SetMaxIdleConns(m.MaxIdle)
 	sqlDb.SetConnMaxLifetime(time.Duration(m.MaxLifetime) * time.Second)
@@ -51,7 +55,7 @@ func Init() {
 		log.Fatalf("mysql connect error: %v", err)
 	}
 
-	if err := D.AutoMigrate(model.Account{}, model.App{}, model.OpenId{}, model.UniqueId{}); err != nil {
+	if err := D.AutoMigrate(model.Account{}, model.App{}, model.OpenId{}, model.UniqueId{}, model.PassKey{}); err != nil {
 		log.Fatalf("mysql migrate error: %v", err)
 	}
 
