@@ -106,8 +106,13 @@ func BeginRegistration(ctx context.Context, account model.Account) (Registration
 	return creation.Response, nil
 }
 
-// CompleteRegistration 校验并保存 passkey
+// CompleteRegistration 校验并保存 passkey（保留向后兼容）
 func CompleteRegistration(ctx context.Context, account model.Account, parsed *protocol.ParsedCredentialCreationData) (*model.PassKey, error) {
+	return CompleteRegistrationWithRemark(ctx, account, parsed, "")
+}
+
+// CompleteRegistrationWithRemark 校验并保存 passkey（带备注）
+func CompleteRegistrationWithRemark(ctx context.Context, account model.Account, parsed *protocol.ParsedCredentialCreationData, remark string) (*model.PassKey, error) {
 	if parsed == nil {
 		return nil, errors.New("empty credential data")
 	}
@@ -135,7 +140,7 @@ func CompleteRegistration(ctx context.Context, account model.Account, parsed *pr
 		return nil, err
 	}
 
-	passkey, err := saveCredential(account.ID, credential)
+	passkey, err := saveCredentialWithRemark(account.ID, credential, remark)
 	if err != nil {
 		return nil, err
 	}

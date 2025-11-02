@@ -13,6 +13,7 @@ type LoginOptions = protocol.PublicKeyCredentialRequestOptions
 // Summary 用于对外输出的 Passkey 信息
 type Summary struct {
 	ID           int      `json:"id"`
+	Remark       string   `json:"remark"`       // 备注
 	CreatedAt    int64    `json:"createdAt"`
 	LastUsedAt   int64    `json:"lastUsedAt"`
 	CloneWarning bool     `json:"cloneWarning"`

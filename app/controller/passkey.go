@@ -1,9 +1,11 @@
 package controller
 
 import (
+	"bytes"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"io"
 	"log"
 	"strconv"
 	"strings"
@@ -52,8 +54,27 @@ func PasskeyRegistrationFinish(c *gin.Context) {
 		return
 	}
 
-	var parsed *protocol.ParsedCredentialCreationData
+	// 先获取 remark 参数（可选）
+	var remark string
 	contentType := c.GetHeader("Content-Type")
+	if strings.Contains(contentType, "application/x-www-form-urlencoded") {
+		// 从表单获取 remark
+		remark = c.PostForm("remark")
+	} else {
+		// 从 JSON 获取 remark
+		var jsonBody map[string]interface{}
+		bodyBytes, _ := c.GetRawData()
+		if len(bodyBytes) > 0 {
+			json.Unmarshal(bodyBytes, &jsonBody)
+			if r, ok := jsonBody["remark"].(string); ok {
+				remark = r
+			}
+		}
+		// 重置请求体供后续解析使用
+		c.Request.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
+	}
+
+	var parsed *protocol.ParsedCredentialCreationData
 	if strings.Contains(contentType, "application/x-www-form-urlencoded") {
 		// 解析表单数据
 		err := c.Request.ParseForm()
@@ -128,7 +149,8 @@ func PasskeyRegistrationFinish(c *gin.Context) {
 		return
 	}
 
-	credential, err := passkey.CompleteRegistration(c.Request.Context(), *account, parsed)
+	// 完成注册，并传递备注
+	credential, err := passkey.CompleteRegistrationWithRemark(c.Request.Context(), *account, parsed, remark)
 	if err != nil {
 		if errors.Is(err, passkey.ErrSessionNotFound) {
 			api.Fail("挑战已过期，请重试")
@@ -149,13 +171,13 @@ func PasskeyRegistrationFinish(c *gin.Context) {
 //	POST /passkey/login/options
 func PasskeyLoginOptions(c *gin.Context) {
 	api := apiutil.New(c)
-	
+
 	// 可选：从请求体获取用户标识（支持有用户名和无用户名两种模式）
 	var req struct {
 		Username string `json:"username,omitempty"` // 可选字段
 	}
 	_ = c.ShouldBindJSON(&req) // 忽略错误，因为 username 是可选的
-	
+
 	if req.Username != "" {
 		// 模式1：用户提供了用户名（条件式 UI）
 		var account model.Account
@@ -168,7 +190,7 @@ func PasskeyLoginOptions(c *gin.Context) {
 			api.Fail("system error")
 			return
 		}
-		
+
 		// 为特定用户生成登录选项
 		options, err := passkey.BeginLoginForUser(c.Request.Context(), account)
 		if err != nil {
@@ -180,7 +202,7 @@ func PasskeyLoginOptions(c *gin.Context) {
 			api.Fail("生成登录参数失败")
 			return
 		}
-		
+
 		api.SuccessWithData("success", options)
 	} else {
 		// 模式2：无用户名登录（无条件 UI）
@@ -191,7 +213,7 @@ func PasskeyLoginOptions(c *gin.Context) {
 			api.Fail("生成登录参数失败")
 			return
 		}
-		
+
 		api.SuccessWithData("success", options)
 	}
 }
@@ -201,10 +223,10 @@ func PasskeyLoginOptions(c *gin.Context) {
 //	POST /passkey/login
 func PasskeyLoginFinish(c *gin.Context) {
 	api := apiutil.New(c)
-	
+
 	var parsed *protocol.ParsedCredentialAssertionData
 	contentType := c.GetHeader("Content-Type")
-	
+
 	if strings.Contains(contentType, "application/x-www-form-urlencoded") {
 		// 处理表单格式的数据
 		err := c.Request.ParseForm()
@@ -213,13 +235,13 @@ func PasskeyLoginFinish(c *gin.Context) {
 			return
 		}
 		form := c.Request.Form
-		
+
 		// 打印所有表单字段用于调试
 		log.Printf("[DEBUG] Login form fields:")
 		for key, values := range form {
 			log.Printf("  %s = %s", key, strings.Join(values, ", "))
 		}
-		
+
 		// 获取表单字段
 		id := form.Get("id")
 		rawId := form.Get("rawId")
@@ -228,36 +250,36 @@ func PasskeyLoginFinish(c *gin.Context) {
 		authenticatorData := form.Get("response[authenticatorData]")
 		signature := form.Get("response[signature]")
 		userHandle := form.Get("response[userHandle]")
-		
+
 		if id == "" || clientDataJSON == "" || authenticatorData == "" || signature == "" {
 			log.Printf("[ERROR] Missing required fields - id:%v, clientDataJSON:%v, authenticatorData:%v, signature:%v",
 				id != "", clientDataJSON != "", authenticatorData != "", signature != "")
 			api.Fail("missing credential data")
 			return
 		}
-		
+
 		// 构造符合 webauthn 期望的 JSON 结构
 		credentialData := map[string]interface{}{
 			"id":    id,
 			"rawId": rawId,
 			"type":  responseType,
 			"response": map[string]interface{}{
-				"clientDataJSON":     clientDataJSON,
-				"authenticatorData":  authenticatorData,
-				"signature":          signature,
-				"userHandle":         userHandle,
+				"clientDataJSON":    clientDataJSON,
+				"authenticatorData": authenticatorData,
+				"signature":         signature,
+				"userHandle":        userHandle,
 			},
 		}
-		
+
 		// 序列化为 JSON
 		jsonData, err := json.Marshal(credentialData)
 		if err != nil {
 			api.Fail("marshal error")
 			return
 		}
-		
+
 		log.Printf("[DEBUG] Login JSON data: %s", string(jsonData))
-		
+
 		// 解析凭证
 		parsed, err = protocol.ParseCredentialRequestResponseBody(strings.NewReader(string(jsonData)))
 		if err != nil {
@@ -275,17 +297,17 @@ func PasskeyLoginFinish(c *gin.Context) {
 			return
 		}
 	}
-	
+
 	if parsed == nil {
 		log.Printf("[ERROR] parsed credential is nil")
 		api.Fail("invalid credential")
 		return
 	}
-	
+
 	// 方式1：通过 userHandle（如果客户端提供了）
 	var account model.Account
 	var found bool
-	
+
 	if len(parsed.Response.UserHandle) > 0 {
 		// userHandle 是用户 ID 的 base64 编码
 		userIDStr := string(parsed.Response.UserHandle)
@@ -296,7 +318,7 @@ func PasskeyLoginFinish(c *gin.Context) {
 			}
 		}
 	}
-	
+
 	// 方式2：通过 credential ID 查找
 	if !found {
 		credentialID := passkey.EncodeKey(parsed.RawID)
@@ -308,7 +330,7 @@ func PasskeyLoginFinish(c *gin.Context) {
 			}
 		}
 	}
-	
+
 	if !found {
 		log.Printf("[ERROR] User not found for credential ID: %s", base64.StdEncoding.EncodeToString(parsed.RawID))
 		api.Fail("invalid credential")
@@ -368,6 +390,7 @@ func PasskeyList(c *gin.Context) {
 	for _, item := range passkeys {
 		summaries = append(summaries, passkey.Summary{
 			ID:           item.ID,
+			Remark:       item.Remark, // 包含备注信息
 			CreatedAt:    item.CreatedAt,
 			LastUsedAt:   item.LastUsedAt,
 			CloneWarning: item.CloneWarning,
@@ -376,9 +399,7 @@ func PasskeyList(c *gin.Context) {
 		})
 	}
 
-	api.SuccessWithData("success", gin.H{
-		"items": summaries,
-	})
+	api.SuccessWithData("success", summaries)
 }
 
 // PasskeyDelete 删除指定 Passkey

@@ -10,6 +10,7 @@ type PassKey struct {
 	SignCount    uint32 `gorm:"type:int unsigned"`
 	Transport    string `gorm:"type:varchar(255)"`
 	CloneWarning bool   `gorm:"type:tinyint(1);default:0"`
+	Remark       string `gorm:"type:varchar(255);default:''"`  // 备注字段
 	CreatedAt    int64  `gorm:"type:bigint;not null"`
 	UpdatedAt    int64  `gorm:"type:bigint;not null"`
 	LastUsedAt   int64  `gorm:"type:bigint;default:0"`

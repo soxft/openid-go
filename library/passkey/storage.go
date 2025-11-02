@@ -19,6 +19,10 @@ func loadUserPasskeys(userID int) ([]model.PassKey, error) {
 }
 
 func saveCredential(userID int, credential *webauthn.Credential) (*model.PassKey, error) {
+	return saveCredentialWithRemark(userID, credential, "")
+}
+
+func saveCredentialWithRemark(userID int, credential *webauthn.Credential, remark string) (*model.PassKey, error) {
 	if credential == nil {
 		return nil, errors.New("credential is nil")
 	}
@@ -42,6 +46,7 @@ func saveCredential(userID int, credential *webauthn.Credential) (*model.PassKey
 		SignCount:    credential.Authenticator.SignCount,
 		Transport:    transports,
 		CloneWarning: credential.Authenticator.CloneWarning,
+		Remark:       remark,  // 添加备注
 		CreatedAt:    now,
 		UpdatedAt:    now,
 	}
