@@ -1,10 +1,11 @@
 package webutil
 
 import (
-	"github.com/gin-gonic/gin"
-	"github.com/soxft/openid-go/config"
 	"log"
 	"os"
+
+	"github.com/gin-gonic/gin"
+	"github.com/soxft/openid-go/config"
 )
 
 func Init() {
@@ -22,11 +23,11 @@ func Init() {
 	initRoute(r)
 
 	log.Printf("[INFO] Web initailizing success, running at %s ", config.Server.Addr)
-	//if err := r.Run(config.Server.Addr); err != nil {
-	//	log.Panic(err)
-	//}
-
-	if err := r.RunTLS(config.Server.Addr, "server.pem", "server.key"); err != nil {
+	if err := r.Run(config.Server.Addr); err != nil {
 		log.Panic(err)
 	}
+
+	// if err := r.RunTLS(config.Server.Addr, "server.pem", "server.key"); err != nil {
+	// 	log.Panic(err)
+	// }
 }

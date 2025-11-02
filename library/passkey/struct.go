@@ -1,38 +1,23 @@
 package passkey
 
-type KeyCreatePrepare struct {
-	Challenge              string                 `json:"challenge"`
-	Rp                     Rp                     `json:"rp"`
-	User                   User                   `json:"user"`
-	PubKeyCredParams       []PubKeyCredParams     `json:"pubKeyCredParams"`
-	Timeout                int                    `json:"timeout"`
-	Attestation            string                 `json:"attestation"`
-	AuthenticatorSelection AuthenticatorSelection `json:"authenticatorSelection"`
-	Extensions             Extensions             `json:"extensions"`
-}
+import (
+	"time"
 
-type Rp struct {
-	Name string `json:"name"`
-	Id   string `json:"id"`
-}
+	"github.com/go-webauthn/webauthn/protocol"
+)
 
-type User struct {
-	Id          string `json:"id"`
-	Name        string `json:"name"`
-	DisplayName string `json:"displayName"`
-}
+// RegistrationOptions 兼容旧代码的类型别名
+type RegistrationOptions = protocol.PublicKeyCredentialCreationOptions
 
-type PubKeyCredParams struct {
-	Alg  int    `json:"alg"`
-	Type string `json:"type"`
-}
+// LoginOptions 兼容旧代码的类型别名
+type LoginOptions = protocol.PublicKeyCredentialRequestOptions
 
-type AuthenticatorSelection struct {
-	AuthenticatorAttachment string `json:"authenticatorAttachment"`
-	RequireResidentKey      bool   `json:"requireResidentKey"`
-	ResidentKey             string `json:"residentKey"`
-}
-
-type Extensions struct {
-	CredProps bool `json:"credProps"`
+// Summary 用于对外输出的 Passkey 信息
+type Summary struct {
+	ID           int        `json:"id"`
+	CreatedAt    time.Time  `json:"createdAt"`
+	LastUsedAt   *time.Time `json:"lastUsedAt,omitempty"`
+	CloneWarning bool       `json:"cloneWarning"`
+	SignCount    uint32     `json:"signCount"`
+	Transports   []string   `json:"transports"`
 }

@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/soxft/openid-go/library/apiutil"
 	"github.com/soxft/openid-go/library/apputil"
@@ -27,7 +26,7 @@ func UserApp() gin.HandlerFunc {
 		if i, err := apputil.CheckIfUserApp(appID, userID); err != nil {
 			//log.Printf("check if user app error: %v", err)
 
-			api.Abort401("Unauthorized", fmt.Sprintf("middleware.user_app.error.not_user_app"))
+			api.Abort401("Unauthorized", "middleware.user_app.error.not_user_app")
 			return
 		} else if !i {
 			api.Abort200("Unauthorized", "middleware.user_app.not_user_app")

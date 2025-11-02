@@ -43,7 +43,17 @@ func initRoute(r *gin.Engine) {
 		pass := r.Group("/passkey")
 		{
 			pass.Use(middleware.AuthPermission())
-			pass.GET("/create/option", controller.PasskeyGetOption)
+			// Registration endpoints
+			pass.GET("/register/options", controller.PasskeyRegistrationOptions)
+			pass.POST("/register", controller.PasskeyRegistrationFinish)
+
+			// Login endpoints
+			pass.GET("/login/options", controller.PasskeyLoginOptions)
+			pass.POST("/login", controller.PasskeyLoginFinish)
+
+			// Management endpoints
+			pass.GET("", controller.PasskeyList)
+			pass.DELETE(":id", controller.PasskeyDelete)
 		}
 
 		app := r.Group("/app")
