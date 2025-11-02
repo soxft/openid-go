@@ -32,6 +32,7 @@ func saveCredential(userID int, credential *webauthn.Credential) (*model.PassKey
 	encodedAAGUID := encodeKey(credential.Authenticator.AAGUID)
 	transports := transportsToString(credential.Transport)
 
+	now := time.Now().Unix()
 	passkey := model.PassKey{
 		UserID:       userID,
 		CredentialID: encodedID,
@@ -41,6 +42,8 @@ func saveCredential(userID int, credential *webauthn.Credential) (*model.PassKey
 		SignCount:    credential.Authenticator.SignCount,
 		Transport:    transports,
 		CloneWarning: credential.Authenticator.CloneWarning,
+		CreatedAt:    now,
+		UpdatedAt:    now,
 	}
 
 	var existing model.PassKey
@@ -61,7 +64,7 @@ func saveCredential(userID int, credential *webauthn.Credential) (*model.PassKey
 			"sign_count":    credential.Authenticator.SignCount,
 			"transport":     transports,
 			"clone_warning": credential.Authenticator.CloneWarning,
-			"updated_at":    time.Now(),
+			"updated_at":    time.Now().Unix(),
 		}
 		if err := dbutil.D.Model(&existing).Updates(updates).Error; err != nil {
 			return nil, err
@@ -79,12 +82,12 @@ func updateCredentialAfterLogin(userID int, credential *webauthn.Credential) (*m
 		return nil, errors.New("credential id is empty")
 	}
 
-	now := time.Now()
+	now := time.Now().Unix()
 	updates := map[string]interface{}{
 		"sign_count":    credential.Authenticator.SignCount,
 		"clone_warning": credential.Authenticator.CloneWarning,
 		"transport":     transportsToString(credential.Transport),
-		"last_used_at":  &now,
+		"last_used_at":  now,
 		"updated_at":    now,
 	}
 

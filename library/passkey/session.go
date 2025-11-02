@@ -80,3 +80,14 @@ func deleteSession(ctx context.Context, key string) error {
 	}
 	return redisutil.RDB.Del(ctx, key).Err()
 }
+
+// 通用会话管理函数
+func storeGenericSession(ctx context.Context, key string, data *webauthn.SessionData, ttl time.Duration) error {
+	fullKey := fmt.Sprintf("%s:%s", config.RedisPrefix, key)
+	return storeSession(ctx, fullKey, data, ttl)
+}
+
+func loadGenericSession(ctx context.Context, key string) (*webauthn.SessionData, error) {
+	fullKey := fmt.Sprintf("%s:%s", config.RedisPrefix, key)
+	return loadSession(ctx, fullKey)
+}

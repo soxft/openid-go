@@ -98,6 +98,11 @@ func convertPasskeys(passkeys []model.PassKey) ([]webauthn.Credential, error) {
 	return credentials, nil
 }
 
+// EncodeKey 编码密钥为 base64 字符串（导出给控制器使用）
+func EncodeKey(data []byte) string {
+	return encodeKey(data)
+}
+
 func encodeKey(data []byte) string {
 	if len(data) == 0 {
 		return ""
