@@ -168,54 +168,21 @@ func PasskeyRegistrationFinish(c *gin.Context) {
 
 // PasskeyLoginOptions 获取 Passkey 登录选项（无需用户名）
 //
-//	POST /passkey/login/options
+//	GET /passkey/login/options
 func PasskeyLoginOptions(c *gin.Context) {
 	api := apiutil.New(c)
 
-	// 可选：从请求体获取用户标识（支持有用户名和无用户名两种模式）
-	var req struct {
-		Username string `json:"username,omitempty"` // 可选字段
+	// 模式2：无用户名登录（无条件 UI）
+	// 生成通用的登录挑战，不指定 allowCredentials
+	options, err := passkey.BeginDiscoverableLogin(c.Request.Context())
+	if err != nil {
+		log.Printf("[ERROR] passkey begin discoverable login failed: %v", err)
+		api.Fail("生成登录参数失败")
+		return
 	}
-	_ = c.ShouldBindJSON(&req) // 忽略错误，因为 username 是可选的
 
-	if req.Username != "" {
-		// 模式1：用户提供了用户名（条件式 UI）
-		var account model.Account
-		if err := dbutil.D.Where("username = ? OR email = ?", req.Username, req.Username).Take(&account).Error; err != nil {
-			if errors.Is(err, gorm.ErrRecordNotFound) {
-				api.Fail("user not found")
-				return
-			}
-			log.Printf("[ERROR] query account failed: %v", err)
-			api.Fail("system error")
-			return
-		}
+	api.SuccessWithData("success", options)
 
-		// 为特定用户生成登录选项
-		options, err := passkey.BeginLoginForUser(c.Request.Context(), account)
-		if err != nil {
-			if errors.Is(err, passkey.ErrNoPasskeyRegistered) {
-				api.Fail("未绑定 Passkey")
-				return
-			}
-			log.Printf("[ERROR] passkey begin login failed: %v", err)
-			api.Fail("生成登录参数失败")
-			return
-		}
-
-		api.SuccessWithData("success", options)
-	} else {
-		// 模式2：无用户名登录（无条件 UI）
-		// 生成通用的登录挑战，不指定 allowCredentials
-		options, err := passkey.BeginDiscoverableLogin(c.Request.Context())
-		if err != nil {
-			log.Printf("[ERROR] passkey begin discoverable login failed: %v", err)
-			api.Fail("生成登录参数失败")
-			return
-		}
-
-		api.SuccessWithData("success", options)
-	}
 }
 
 // PasskeyLoginFinish 完成 Passkey 登录

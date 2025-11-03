@@ -43,12 +43,12 @@ func initRoute(r *gin.Engine) {
 		pass := r.Group("/passkey")
 		{
 			// Login endpoints (no auth required)
-			pass.POST("/login/options", controller.PasskeyLoginOptions)
+			pass.GET("/login/options", controller.PasskeyLoginOptions)
 			pass.POST("/login", controller.PasskeyLoginFinish)
 
 			pass.Use(middleware.AuthPermission())
 			// Registration endpoints (auth required)
-			pass.POST("/register/options", controller.PasskeyRegistrationOptions)
+			pass.GET("/register/options", controller.PasskeyRegistrationOptions)
 			pass.POST("/register", controller.PasskeyRegistrationFinish)
 
 			// Management endpoints (auth required)
