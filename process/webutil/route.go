@@ -48,7 +48,7 @@ func initRoute(r *gin.Engine) {
 
 			pass.Use(middleware.AuthPermission())
 			// Registration endpoints (auth required)
-			pass.GET("/register/options", controller.PasskeyRegistrationOptions)
+			pass.POST("/register/options", controller.PasskeyRegistrationOptions)
 			pass.POST("/register", controller.PasskeyRegistrationFinish)
 
 			// Management endpoints (auth required)
