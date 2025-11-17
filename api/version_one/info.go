@@ -39,7 +39,7 @@ func Info(c *gin.Context) {
 	}
 
 	// 检测token是否正确 并获取userId
-	userId, err := helper.GetUserIdByToken(c, req.AppId, req.AppSecret)
+	userId, err := helper.GetUserIdByToken(c, req.AppId, req.Token)
 	if err != nil {
 		if errors.Is(err, helper.ErrTokenNotExists) {
 			api.Fail("Token not exists")
