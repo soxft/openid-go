@@ -12,8 +12,8 @@ import (
 )
 
 type CodeRequest struct {
-	AppId       string `form:"appid" binding:"required"`
-	RedirectUri string `form:"redirect_uri" binding:"required"`
+	AppId       string `json:"appid" binding:"required"`
+	RedirectUri string `json:"redirect_uri" binding:"required"`
 }
 
 type CodeResponse struct {
@@ -28,7 +28,7 @@ func Code(c *gin.Context) {
 	api := apiutil.New(c)
 
 	var req CodeRequest
-	if err := c.ShouldBindQuery(&req); err != nil {
+	if err := c.ShouldBindJSON(&req); err != nil {
 		api.Fail("Invalid params")
 		return
 	}
