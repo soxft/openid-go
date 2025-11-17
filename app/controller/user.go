@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/gin-gonic/gin"
+	"github.com/soxft/openid-go/app/dto"
 	"github.com/soxft/openid-go/app/model"
 	"github.com/soxft/openid-go/library/apiutil"
 	"github.com/soxft/openid-go/library/codeutil"
@@ -52,19 +53,23 @@ func UserLogout(c *gin.Context) {
 // @description 修改用户密码
 // @router PATCH /user/password/update
 func UserPasswordUpdate(c *gin.Context) {
-	oldPassword := c.PostForm("old_password")
-	newPassword := c.PostForm("new_password")
-
+	var req dto.UserPasswordUpdateRequest
+	api := apiutil.New(c)
+	
+	if err := dto.BindJSON(c, &req); err != nil {
+		api.Fail("请求参数错误")
+		return
+	}
+	
 	userId := c.GetInt("userId")
 	username := c.GetString("username")
-	api := apiutil.New(c)
 
-	if !toolutil.IsPassword(newPassword) {
+	if !toolutil.IsPassword(req.NewPassword) {
 		api.Fail("密码应在8～64位")
 		return
 	}
 	// verify old password
-	if _, err := userutil.CheckPassword(username, oldPassword); errors.Is(err, userutil.ErrPasswd) {
+	if _, err := userutil.CheckPassword(username, req.OldPassword); errors.Is(err, userutil.ErrPasswd) {
 		api.Fail("旧密码错误")
 		return
 	} else if err != nil {
@@ -75,7 +80,7 @@ func UserPasswordUpdate(c *gin.Context) {
 	// change password
 	var err error
 	var newPwd string
-	if newPwd, err = userutil.GeneratePwd(newPassword); err != nil {
+	if newPwd, err = userutil.GeneratePwd(req.NewPassword); err != nil {
 		log.Printf("generate password failed: %v", err)
 		api.Fail("system error")
 		return
@@ -106,19 +111,27 @@ func UserPasswordUpdate(c *gin.Context) {
 // @description 修改邮箱 的 发送邮箱验证码 至新邮箱
 // @router POST /user/email/update/code
 func UserEmailUpdateCode(c *gin.Context) {
-	password := c.PostForm("password")
-	newEmail := c.PostForm("new_email")
-
-	username := c.GetString("username")
-
+	var req struct {
+		Password string `json:"password" binding:"required"`
+		NewEmail string `json:"new_email" binding:"required,email"`
+	}
 	api := apiutil.New(c)
+	
+	if err := dto.BindJSON(c, &req); err != nil {
+		api.Fail("请求参数错误")
+		return
+	}
+	
+	username := c.GetString("username")
+	newEmail := req.NewEmail
+
 	if !toolutil.IsEmail(newEmail) {
 		api.Fail("非法的邮箱格式")
 		return
 	}
 
 	// verify old password
-	if _, err := userutil.CheckPassword(username, password); errors.Is(err, userutil.ErrPasswd) {
+	if _, err := userutil.CheckPassword(username, req.Password); errors.Is(err, userutil.ErrPasswd) {
 		api.Fail("旧密码错误")
 		return
 	} else if err != nil {
@@ -168,9 +181,17 @@ func UserEmailUpdateCode(c *gin.Context) {
 // @description 修改用户邮箱
 // @router PATCH /user/email/update
 func UserEmailUpdate(c *gin.Context) {
-	newEmail := c.PostForm("new_email")
-	code := c.PostForm("code")
+	var req dto.UserEmailUpdateRequest
 	api := apiutil.New(c)
+	
+	if err := dto.BindJSON(c, &req); err != nil {
+		api.Fail("请求参数错误")
+		return
+	}
+	
+	newEmail := req.Email
+	code := req.Code
+	
 	if !toolutil.IsEmail(newEmail) {
 		api.Fail("非法的邮箱格式")
 		return

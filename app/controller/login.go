@@ -2,21 +2,22 @@ package controller
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/soxft/openid-go/app/dto"
 	"github.com/soxft/openid-go/library/apiutil"
 	"github.com/soxft/openid-go/library/userutil"
 )
 
 func Login(c *gin.Context) {
-	username := c.PostForm("username")
-	password := c.PostForm("password")
+	var req dto.LoginRequest
 	api := apiutil.New(c)
-	if len(username) == 0 || len(password) == 0 {
-		api.Fail("用户名或密码不能为空")
+	
+	if err := dto.BindJSON(c, &req); err != nil {
+		api.Fail("请求参数错误")
 		return
 	}
 
 	// check username and password
-	if userId, err := userutil.CheckPassword(username, password); err != nil {
+	if userId, err := userutil.CheckPassword(req.Username, req.Password); err != nil {
 		api.Fail(err.Error())
 		return
 	} else {

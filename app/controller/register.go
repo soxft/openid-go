@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/gin-gonic/gin"
+	"github.com/soxft/openid-go/app/dto"
 	"github.com/soxft/openid-go/app/model"
 	"github.com/soxft/openid-go/config"
 	"github.com/soxft/openid-go/library/apiutil"
@@ -21,9 +22,15 @@ import (
 // @description send code to email
 // @route POST /register/code
 func RegisterCode(c *gin.Context) {
-	email := c.PostForm("email")
-
+	var req dto.RegisterCodeRequest
 	api := apiutil.New(c)
+	
+	if err := dto.BindJSON(c, &req); err != nil {
+		api.Fail("请求参数错误")
+		return
+	}
+	
+	email := req.Email
 	// verify email by re
 	if !toolutil.IsEmail(email) {
 		api.Fail("invalid email")
@@ -85,12 +92,18 @@ func RegisterCode(c *gin.Context) {
 // @description do register
 // @route POST /register
 func RegisterSubmit(c *gin.Context) {
-	email := c.PostForm("email")
-	verifyCode := c.PostForm("code")
-	username := c.PostForm("username")
-	password := c.PostForm("password")
-
+	var req dto.RegisterSubmitRequest
 	api := apiutil.New(c)
+	
+	if err := dto.BindJSON(c, &req); err != nil {
+		api.Fail("请求参数错误")
+		return
+	}
+	
+	email := req.Email
+	verifyCode := req.Code
+	username := req.Username
+	password := req.Password
 	// 合法检测
 	if !toolutil.IsEmail(email) {
 		api.Fail("非法的邮箱")

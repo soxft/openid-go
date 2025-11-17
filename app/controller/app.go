@@ -3,28 +3,36 @@ package controller
 import (
 	"errors"
 	"fmt"
+	"log"
+	"strconv"
+	"strings"
+
 	"github.com/gin-gonic/gin"
+	"github.com/soxft/openid-go/app/dto"
 	"github.com/soxft/openid-go/app/model"
 	"github.com/soxft/openid-go/library/apiutil"
 	"github.com/soxft/openid-go/library/apputil"
 	"github.com/soxft/openid-go/process/dbutil"
-	"log"
-	"strconv"
-	"strings"
 )
 
 // AppCreate
 // @description: 创建应用
 // @route: POST /app/create
 func AppCreate(c *gin.Context) {
-	appName := c.PostForm("app_name")
+	var req dto.AppCreateRequest
 	api := apiutil.New(c)
-	if !apputil.CheckName(appName) {
+	
+	if err := dto.BindJSON(c, &req); err != nil {
+		api.Fail("请求参数错误")
+		return
+	}
+	
+	if !apputil.CheckName(req.AppName) {
 		api.Fail("应用名称不合法")
 		return
 	}
 	// 创建应用
-	if success, err := apputil.CreateApp(c.GetInt("userId"), appName); !success {
+	if success, err := apputil.CreateApp(c.GetInt("userId"), req.AppName); !success {
 		api.Fail(err.Error())
 		return
 	}
@@ -36,21 +44,25 @@ func AppCreate(c *gin.Context) {
 // @description: 编辑应用
 // @route: PUT /app/:id
 func AppEdit(c *gin.Context) {
+	var req dto.AppEditRequest
 	appId := c.Param("appid")
-	appName := c.PostForm("app_name")
-	appGateway := c.PostForm("app_gateway")
-
 	api := apiutil.New(c)
+	
+	if err := dto.BindJSON(c, &req); err != nil {
+		api.Fail("请求参数错误")
+		return
+	}
+	
 	// 参数合法性检测
-	if !apputil.CheckName(appName) {
+	if !apputil.CheckName(req.AppName) {
 		api.Fail("应用名称不合法")
 		return
 	}
 
-	if len(appGateway) == 0 {
+	if len(req.AppGateway) == 0 {
 		api.Fail("网关不能为空")
 		return
-	} else if len(appGateway) > 200 {
+	} else if len(req.AppGateway) > 200 {
 		api.Fail("网关长度不能超过 200字符")
 		return
 	}
@@ -59,7 +71,7 @@ func AppEdit(c *gin.Context) {
 	// 检测网关是否合法
 	var gateways []string
 
-	for _, gateway := range strings.Split(appGateway, "\n") {
+	for _, gateway := range strings.Split(req.AppGateway, "\n") {
 		gateway = strings.TrimSpace(gateway)
 		if gateway == "" {
 			continue
@@ -82,7 +94,7 @@ func AppEdit(c *gin.Context) {
 			AppId: appId,
 		}).
 		Updates(model.App{
-			AppName:    appName,
+			AppName:    req.AppName,
 			AppGateway: strings.Join(gateways, ","),
 		}).Error
 	if err != nil {
@@ -153,19 +165,32 @@ func AppInfo(c *gin.Context) {
 // @desc 获取用户app列表
 // @route GET /app/list
 func AppGetList(c *gin.Context) {
+	var req dto.AppListRequest
+	api := apiutil.New(c)
+	
+	// 支持从查询参数获取
 	pageTmp := c.DefaultQuery("page", "1")
 	limitTmp := c.DefaultQuery("per_page", "10")
-	api := apiutil.New(c)
-
+	
 	var err error
 	var page, limit int
 	if page, err = strconv.Atoi(pageTmp); err != nil || page < 1 {
-		api.Fail("参数错误")
-		return
+		page = 1
 	}
-	if limit, err = strconv.Atoi(limitTmp); err != nil || limit < 1 {
-		api.Fail("参数错误")
-		return
+	if limit, err = strconv.Atoi(limitTmp); err != nil || limit < 1 || limit > 100 {
+		limit = 10
+	}
+	
+	// 尝试从JSON获取，如果有的话会覆盖query参数
+	if c.Request.ContentLength > 0 {
+		if err := c.ShouldBindJSON(&req); err == nil {
+			if req.Page > 0 {
+				page = req.Page
+			}
+			if req.PerPage > 0 && req.PerPage <= 100 {
+				limit = req.PerPage
+			}
+		}
 	}
 	offset := (page - 1) * limit
 	// 获取用户Id

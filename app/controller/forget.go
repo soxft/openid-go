@@ -3,7 +3,11 @@ package controller
 import (
 	"encoding/json"
 	"errors"
+	"log"
+	"time"
+
 	"github.com/gin-gonic/gin"
+	"github.com/soxft/openid-go/app/dto"
 	"github.com/soxft/openid-go/app/model"
 	"github.com/soxft/openid-go/library/apiutil"
 	"github.com/soxft/openid-go/library/codeutil"
@@ -13,16 +17,22 @@ import (
 	"github.com/soxft/openid-go/process/dbutil"
 	"github.com/soxft/openid-go/process/queueutil"
 	"gorm.io/gorm"
-	"log"
-	"time"
 )
 
 // ForgetPasswordCode
 // @description 忘记密码发送邮件
 // @router POST /forget/password/code
 func ForgetPasswordCode(c *gin.Context) {
-	email := c.PostForm("email")
+	var req dto.ForgetPasswordCodeRequest
 	api := apiutil.New(c)
+	
+	if err := dto.BindJSON(c, &req); err != nil {
+		api.Fail("请求参数错误")
+		return
+	}
+	
+	email := req.Email
+	
 	if !toolutil.IsEmail(email) {
 		api.Fail("非法的邮箱格式")
 		return
@@ -69,11 +79,18 @@ func ForgetPasswordCode(c *gin.Context) {
 // @description 忘记密码重置
 // @router PATCH /forget/password/update
 func ForgetPasswordUpdate(c *gin.Context) {
-	email := c.PostForm("email")
-	code := c.PostForm("code")
-	newPassword := c.PostForm("new_password")
-
+	var req dto.ForgetPasswordUpdateRequest
 	api := apiutil.New(c)
+	
+	if err := dto.BindJSON(c, &req); err != nil {
+		api.Fail("请求参数错误")
+		return
+	}
+	
+	email := req.Email
+	code := req.Code
+	newPassword := req.Password
+
 	if !toolutil.IsEmail(email) {
 		api.Fail("非法的邮箱格式")
 		return
